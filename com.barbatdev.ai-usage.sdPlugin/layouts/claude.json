@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "ClaudeUsage",
+  "items": [
+    {
+      "key": "title",
+      "type": "text",
+      "rect": [8, 3, 130, 22],
+      "alignment": "left",
+      "font": { "size": 17, "weight": 800 },
+      "value": "CLAUDE"
+    },
+    {
+      "key": "status",
+      "type": "text",
+      "rect": [140, 5, 52, 18],
+      "alignment": "right",
+      "color": "#f5a623",
+      "font": { "size": 10, "weight": 800 },
+      "value": ""
+    },
+    {
+      "key": "sessionLabel",
+      "type": "text",
+      "rect": [8, 32, 30, 22],
+      "alignment": "left",
+      "font": { "size": 15, "weight": 800 },
+      "value": "5H"
+    },
+    {
+      "key": "sessionBar",
+      "type": "bar",
+      "rect": [42, 37, 102, 13],
+      "bar_bg_c": "#332d29",
+      "bar_fill_c": "#e2aa70",
+      "border_w": 0,
+      "subtype": 0,
+      "value": 0
+    },
+    {
+      "key": "sessionValue",
+      "type": "text",
+      "rect": [149, 29, 43, 26],
+      "alignment": "right",
+      "font": { "size": 17, "weight": 800 },
+      "value": "--"
+    },
+    {
+      "key": "weeklyLabel",
+      "type": "text",
+      "rect": [8, 68, 30, 22],
+      "alignment": "left",
+      "font": { "size": 15, "weight": 800 },
+      "value": "7D"
+    },
+    {
+      "key": "weeklyBar",
+      "type": "bar",
+      "rect": [42, 73, 102, 13],
+      "bar_bg_c": "#332d29",
+      "bar_fill_c": "#a77b53",
+      "border_w": 0,
+      "subtype": 0,
+      "value": 0
+    },
+    {
+      "key": "weeklyValue",
+      "type": "text",
+      "rect": [149, 65, 43, 26],
+      "alignment": "right",
+      "font": { "size": 17, "weight": 800 },
+      "value": "--"
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AI Usage settings</title>
+  <style>
+    body { margin: 0; padding: 12px; color: #d8d8d8; font: 12px -apple-system, sans-serif; }
+    label { display: grid; grid-template-columns: 110px 1fr; align-items: center; margin: 10px 0; }
+    input[type="number"], select { box-sizing: border-box; width: 100%; padding: 5px; color: inherit; background: #3d3d3d; border: 1px solid #555; border-radius: 3px; }
+    input[type="checkbox"] { justify-self: start; }
+    button { margin: 4px 0; padding: 6px; color: inherit; background: #3d3d3d; border: 1px solid #555; border-radius: 3px; }
+    p { color: #999; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="refreshSettings">
+    <label>Auto refresh <input id="autoRefresh" type="checkbox" checked></label>
+    <label>Interval (seconds) <input id="refreshInterval" type="number" min="10" max="300" value="30"></label>
+    <p>Usage comes from the selected provider session. Tap the touch strip to refresh immediately.</p>
+  </div>
+  <div id="nanSettings" hidden>
+    <button id="importChromeSession" type="button">Import session from Chrome</button>
+    <label id="nanModelRow">Model
+      <select id="nanModel">
+        <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
+        <option value="mimo-v2.5">MiMo V2.5</option>
+        <option value="qwen3.6">Qwen 3.6</option>
+        <option value="gemma4">Gemma 4</option>
+      </select>
+    </label>
+    <p>Dashboard quota uses an imported Chrome session only after you choose Import session from Chrome.</p>
+  </div>
+  <div id="nanModelUsageSettings" hidden>
+    <label>Model <select id="nanKeyModel"></select></label>
+    <button id="refreshNanModels" type="button">Refresh models</button>
+    <p>Select a model returned by cached NaN dashboard quota or month-to-date metrics. If no session is available, use the existing NaN Usage dial to import a Chrome session.</p>
+  </div>
+
+  <script>
+    const NAN_DEMO_ACTION = "com.barbatdev.ai-usage.nan-demo";
+    const NAN_MODEL_ACTION = "com.barbatdev.ai-usage.nan-model-usage";
+    const NAN_TOTAL_TOKENS_ACTION = "com.barbatdev.ai-usage.nan-total-tokens";
+    const NAN_MONTHLY_TOKENS_ACTION = "com.barbatdev.ai-usage.nan-monthly-tokens";
+    const NAN_DASHBOARD_ACTION = "com.barbatdev.ai-usage.nan-dashboard";
+    const GET_MODELS = "nan.modelUsage.getModels.v1";
+    const REFRESH_MODELS = "nan.modelUsage.refreshModels.v1";
+    const MODELS = "nan.modelUsage.models.v1";
+    let socket;
+    let context;
+    let settings = {};
+    let actionUuid = "";
+    let modelEntries = [];
+
+    function connectElgatoStreamDeckSocket(port, uuid, registerEvent, _info, actionInfo) {
+      context = uuid;
+      socket = new WebSocket(`ws://127.0.0.1:${port}`);
+      socket.addEventListener("open", () => {
+        send(registerEvent, { uuid });
+        send("getSettings", { context });
+        requestModels();
+      });
+      socket.addEventListener("message", ({ data }) => {
+        try {
+          const message = JSON.parse(data);
+          if (message?.event === "didReceiveSettings" && typeof message.payload?.settings === "object" && message.payload.settings !== null) {
+            settings = message.payload.settings;
+            render();
+          }
+          if (message?.event === "sendToPropertyInspector" && message.payload?.kind === MODELS && Array.isArray(message.payload.models)) {
+            modelEntries = message.payload.models.filter((entry) => typeof entry?.id === "string" && entry.id.length > 0 && entry.id.length <= 128 && entry.id.trim() === entry.id && !/[\u0000-\u001f\u007f-\u009f]/.test(entry.id));
+            render();
+          }
+        } catch (_) {}
+      });
+      try {
+        const parsedActionInfo = JSON.parse(actionInfo);
+        actionUuid = parsedActionInfo.action || "";
+        settings = parsedActionInfo.payload.settings || {};
+      } catch (_) {}
+      render();
+    }
+
+    function send(event, payload) { socket.send(JSON.stringify({ event, ...payload })); }
+    function save(patch) {
+      if (actionUuid === NAN_DASHBOARD_ACTION) return;
+      settings = { ...settings, ...patch };
+      send("setSettings", { context, payload: settings });
+    }
+    function requestModels() {
+      if (actionUuid !== NAN_MODEL_ACTION || socket?.readyState !== WebSocket.OPEN) return;
+      send("sendToPlugin", { context, payload: { kind: GET_MODELS } });
+    }
+    function renderKeyModels() {
+      const select = document.querySelector("#nanKeyModel");
+      const selected = validModel(settings.model) ? settings.model : "";
+      select.replaceChildren();
+      const prompt = document.createElement("option");
+      prompt.value = "";
+      prompt.textContent = "Choose model";
+      select.append(prompt);
+      const ids = new Set();
+      for (const entry of modelEntries) {
+        if (ids.has(entry.id)) continue;
+        ids.add(entry.id);
+        const option = document.createElement("option");
+        option.value = entry.id;
+        option.textContent = entry.kind === "uncapped" ? `${entry.id} (Uncapped)` : entry.kind === "monthly" ? `${entry.id} (Month to date)` : entry.id;
+        select.append(option);
+      }
+      if (selected && !ids.has(selected)) {
+        const missing = document.createElement("option");
+        missing.value = selected;
+        missing.textContent = `${selected} (No data)`;
+        select.append(missing);
+      }
+      select.value = selected;
+    }
+    function validModel(value) { return typeof value === "string" && value.length > 0 && value.length <= 128 && value.trim() === value && !/[\u0000-\u001f\u007f-\u009f]/.test(value); }
+
+    function render() {
+      const isNanDemo = actionUuid === NAN_DEMO_ACTION;
+      const isNanModel = actionUuid === NAN_MODEL_ACTION;
+      const isNanMetrics = actionUuid === NAN_TOTAL_TOKENS_ACTION || actionUuid === NAN_MONTHLY_TOKENS_ACTION;
+      const isNanDashboardLauncher = actionUuid === NAN_DASHBOARD_ACTION;
+      document.querySelector("#refreshSettings").hidden = isNanDemo || isNanModel || isNanMetrics || isNanDashboardLauncher;
+      document.querySelector("#nanSettings").hidden = !isNanDemo;
+      document.querySelector("#nanModelUsageSettings").hidden = !isNanModel;
+      document.querySelector("#autoRefresh").checked = settings.autoRefresh !== false;
+      document.querySelector("#refreshInterval").value = settings.refreshInterval || 30;
+      if (isNanModel) renderKeyModels();
+      if (isNanDashboardLauncher) return;
+      if (!isNanDemo) return;
+      const selectedModel = validModel(settings.model) ? settings.model : "deepseek-v4-flash";
+      const model = selectedModel;
+      const modelSelect = document.querySelector("#nanModel");
+      modelSelect.querySelector("option[data-observed]")?.remove();
+      if (![...modelSelect.options].some((option) => option.value === model)) {
+        const observed = document.createElement("option");
+        observed.value = model;
+        observed.textContent = `${model} (Observed)`;
+        observed.dataset.observed = "true";
+        modelSelect.append(observed);
+      }
+      modelSelect.value = model;
+    }
+
+    document.querySelector("#autoRefresh").addEventListener("change", (event) => save({ autoRefresh: event.target.checked }));
+    document.querySelector("#refreshInterval").addEventListener("change", (event) => {
+      const value = Math.min(300, Math.max(10, Number(event.target.value) || 30));
+      event.target.value = value;
+      save({ refreshInterval: value });
+    });
+    document.querySelector("#nanModel").addEventListener("change", (event) => save({ model: event.target.value, liveSelectionInitialized: true }));
+    document.querySelector("#nanKeyModel").addEventListener("change", (event) => save({ model: event.target.value }));
+    document.querySelector("#refreshNanModels").addEventListener("click", () => {
+      if (actionUuid !== NAN_MODEL_ACTION || socket?.readyState !== WebSocket.OPEN) return;
+      send("sendToPlugin", { context, payload: { kind: REFRESH_MODELS } });
+    });
+    document.querySelector("#importChromeSession").addEventListener("click", () => {
+      if (actionUuid !== NAN_DEMO_ACTION || socket?.readyState !== WebSocket.OPEN) return;
+      send("sendToPlugin", { context, payload: { kind: "nan.importChromeSession.v1" } });
+    });
+  </script>
+</body>
+</html>

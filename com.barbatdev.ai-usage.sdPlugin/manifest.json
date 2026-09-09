@@ -1,0 +1,167 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "com.barbatdev.ai-usage",
+  "Name": "NaN Dashboard",
+  "Version": "1.0.3.0",
+  "Author": "jbarbat",
+  "URL": "https://github.com/refactor-ia/streamdeck-nan",
+  "Description": "Monitor AI service usage limits on your StreamDeck+",
+  "Icon": "imgs/plugin/nan-dashboard",
+  "Category": "NaN Dashboard",
+  "CategoryIcon": "imgs/plugin/nan-dashboard",
+  "CodePath": "bin/plugin.js",
+  "PropertyInspectorPath": "ui/property-inspector.html",
+  "SDKVersion": 2,
+  "Nodejs": {
+    "Version": "24"
+  },
+  "Actions": [
+    {
+      "UUID": "com.barbatdev.ai-usage.claude",
+      "Name": "External · Claude Usage",
+      "Icon": "imgs/actions/claude",
+      "Tooltip": "Shows Claude Code usage limits",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/claude.json",
+        "TriggerDescription": {
+          "Push": "Open Claude Console",
+          "Touch": "Refresh data"
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/claude"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.codex",
+      "Name": "External · GPT / OpenAI Usage",
+      "Icon": "imgs/actions/codex",
+      "Tooltip": "Shows GPT/OpenAI usage limits from Codex",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/openai.json",
+        "TriggerDescription": {
+          "Push": "Open OpenAI usage",
+          "Touch": "Refresh data"
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/actions/codex"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.grok",
+      "Name": "External · Grok Usage (Experimental)",
+      "Icon": "imgs/plugin/plugin-icon",
+      "Tooltip": "Shows experimental Grok Build billing usage",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/grok.json",
+        "TriggerDescription": {
+          "Touch": "Refresh data"
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/plugin/plugin-icon"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.nan-demo",
+      "Name": "NaN Usage",
+      "Icon": "imgs/plugin/plugin-icon",
+      "Tooltip": "Shows NaN dashboard quota or legacy observed monthly usage",
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "layout": "layouts/nan.json",
+        "TriggerDescription": {
+          "Touch": "Refresh observed usage"
+        }
+      },
+      "States": [
+        {
+          "Image": "imgs/plugin/plugin-icon"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.nan-model-usage",
+      "Name": "NaN Model Usage",
+      "Icon": "imgs/actions/nan-model/nan-model",
+      "Tooltip": "Shows dashboard consumption for one selected NaN model",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/nan-model/nan-model"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.nan-total-tokens",
+      "Name": "NaN Total Tokens",
+      "Icon": "imgs/actions/nan-model/nan-model",
+      "Tooltip": "Shows all-time NaN dashboard tokens",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/nan-model/nan-model"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.nan-monthly-tokens",
+      "Name": "NaN Monthly Tokens",
+      "Icon": "imgs/actions/nan-model/nan-model",
+      "Tooltip": "Shows month-to-date NaN dashboard tokens",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/nan-model/nan-model"
+        }
+      ]
+    },
+    {
+      "UUID": "com.barbatdev.ai-usage.nan-dashboard",
+      "Name": "NaN Dashboard",
+      "Icon": "imgs/plugin/nan-dashboard",
+      "Tooltip": "Open NaN Dashboard",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/plugin/nan-dashboard"
+        }
+      ]
+    }
+  ],
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "13"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "7.1"
+  }
+}

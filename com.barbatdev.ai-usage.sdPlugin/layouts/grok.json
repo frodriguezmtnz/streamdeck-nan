@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "GrokUsage",
+  "items": [
+    {
+      "key": "title",
+      "type": "text",
+      "rect": [8, 3, 60, 22],
+      "alignment": "left",
+      "font": { "size": 18, "weight": 800 },
+      "value": "GROK"
+    },
+    {
+      "key": "experimental",
+      "type": "text",
+      "rect": [72, 5, 120, 18],
+      "alignment": "right",
+      "color": "#f5a623",
+      "font": { "size": 10, "weight": 800 },
+      "value": "EXPERIMENTAL"
+    },
+    {
+      "key": "period",
+      "type": "text",
+      "rect": [8, 34, 110, 22],
+      "alignment": "left",
+      "color": "#b9c9ff",
+      "font": { "size": 12, "weight": 800 },
+      "value": "BILLING PERIOD"
+    },
+    {
+      "key": "value",
+      "type": "text",
+      "rect": [122, 28, 70, 32],
+      "alignment": "right",
+      "font": { "size": 24, "weight": 800 },
+      "value": "--"
+    },
+    {
+      "key": "indicator",
+      "type": "bar",
+      "rect": [8, 69, 184, 16],
+      "bar_bg_c": "#252b3d",
+      "bar_fill_c": "#7d5cff",
+      "border_w": 0,
+      "subtype": 0,
+      "value": 0
+    },
+    {
+      "key": "status",
+      "type": "text",
+      "rect": [8, 88, 184, 10],
+      "alignment": "right",
+      "color": "#f5a623",
+      "font": { "size": 8, "weight": 800 },
+      "value": "NO DATA"
+    }
+  ]
+}

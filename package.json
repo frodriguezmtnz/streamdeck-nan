@@ -1,0 +1,32 @@
+{
+  "name": "ai-usage",
+  "version": "1.0.3",
+  "private": true,
+  "packageManager": "pnpm@11.13.0",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "build:nan-keychain": "node scripts/build-nan-keychain.mjs",
+    "check:links": "node scripts/check-markdown-links.mjs",
+    "release:contract": "node scripts/release-contract.mjs",
+    "release:pack": "node scripts/pack-streamdeck.mjs",
+    "release:pack:verify": "node scripts/verify-pack-reproducibility.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "test:release-contract": "node --test scripts/release-assets.test.mjs scripts/release-contract.test.mjs scripts/scan-secrets.test.mjs scripts/sign-nan-keychain.test.mjs scripts/notarize-streamdeck.test.mjs scripts/test-typescript-resolver.test.mjs scripts/workflow-contract.test.mjs",
+    "check": "tsc --noEmit && pnpm exec streamdeck validate com.barbatdev.ai-usage.sdPlugin",
+    "check:workspace": "pnpm check && pnpm --filter './packages/**' -r check",
+    "test": "pnpm build && node scripts/run-tests.mjs",
+    "test:workspace": "pnpm test && pnpm test:release-contract && pnpm --filter './packages/**' -r test",
+    "watch": "rollup -c -w --watch.onEnd=\"pnpm exec streamdeck restart com.barbatdev.ai-usage\""
+  },
+  "devDependencies": {
+    "@elgato/cli": "1.7.4",
+    "@elgato/streamdeck": "^2.0.0",
+    "@rollup/plugin-typescript": "^12.0.0",
+    "@types/node": "^26.1.0",
+    "rollup": "^4.0.0",
+    "tslib": "^2.0.0",
+    "typescript": "^5.0.0",
+    "yaml": "2.8.1"
+  }
+}
