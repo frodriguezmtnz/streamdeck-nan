@@ -23,29 +23,20 @@ jobs:
         run: node scripts/release-contract.mjs "$GITHUB_REF_NAME" versions
       - run: pnpm check:workspace
       - run: pnpm test:workspace
+      - name: Verify plugin bundle is tracked
+        run: git ls-files --error-unmatch -- com.barbatdev.ai-usage.sdPlugin/bin/plugin.js
       - run: pnpm build
       - name: Build universal NaN Keychain helper
         run: pnpm build:nan-keychain
-      - name: Sign and verify universal NaN Keychain helper
-        run: node scripts/sign-nan-keychain.mjs
-        env:
-          APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64: "${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}"
-          APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD: "${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_PASSWORD }}"
-          APPLE_DEVELOPER_ID_APPLICATION_IDENTITY: "${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_IDENTITY }}"
-          APPLE_DEVELOPER_ID_TEAM_ID: "${{ secrets.APPLE_DEVELOPER_ID_TEAM_ID }}"
+      - name: Verify universal NaN Keychain helper is executable
+        run: test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
       - run: pnpm scan:secrets
       - name: Gitleaks scan
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env: { GITHUB_TOKEN: "${{ github.token }}" }
       - name: Package immutable staged plugin
         run: pnpm release:pack:verify
-      - name: Notarize immutable staged plugin
-        run: node scripts/notarize-streamdeck.mjs dist/*.streamDeckPlugin
-        env:
-          APPLE_APP_STORE_CONNECT_API_KEY_P8_BASE64: "${{ secrets.APPLE_APP_STORE_CONNECT_API_KEY_P8_BASE64 }}"
-          APPLE_APP_STORE_CONNECT_KEY_ID: "${{ secrets.APPLE_APP_STORE_CONNECT_KEY_ID }}"
-          APPLE_APP_STORE_CONNECT_ISSUER_ID: "${{ secrets.APPLE_APP_STORE_CONNECT_ISSUER_ID }}"
-      - name: Verify notarized release bytes
+      - name: Verify release bytes
         run: |
           (cd dist && shasum -a 256 *.streamDeckPlugin > SHA256SUMS)
           node scripts/release-contract.mjs "$GITHUB_REF_NAME"
@@ -56,7 +47,6 @@ jobs:
           name: release-${{ github.ref_name }}
           path: |
             dist/*.streamDeckPlugin
-            dist/NOTARIZATION.json
             dist/SHA256SUMS
           if-no-files-found: error
           retention-days: 7

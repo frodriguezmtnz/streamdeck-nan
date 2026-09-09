@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      # Remove import/sanitized-source after the default-branch transition.
+      - main
+      - import/sanitized-source
   pull_request:
-    branches: [main]
+    branches:
+      # Remove import/sanitized-source after the default-branch transition.
+      - main
+      - import/sanitized-source
 
 permissions:
   contents: read
@@ -34,6 +40,9 @@ jobs:
       - name: Run tests (workspace)
         run: pnpm test:workspace
 
+      - name: Verify plugin bundle is tracked
+        run: git ls-files --error-unmatch -- com.barbatdev.ai-usage.sdPlugin/bin/plugin.js
+
       - name: Build plugin bundle
         run: pnpm build
 
@@ -58,9 +67,11 @@ jobs:
         run: |
           node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")" versions
           node -e "require('node:fs').rmSync('dist', { recursive: true, force: true })"
+          pnpm build:nan-keychain
+          test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
           pnpm release:pack:verify
           (cd dist && shasum -a 256 *.streamDeckPlugin > SHA256SUMS)
-          node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")"
+          node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")" unsigned-ci
 
   markdown-links:
     runs-on: ubuntu-latest

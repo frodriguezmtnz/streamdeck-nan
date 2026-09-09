@@ -1,8 +1,7 @@
 # Exclude everything by default
 **
 
-# Re-add only what the build needs
+# Retain repository package metadata only
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml
-!packages/

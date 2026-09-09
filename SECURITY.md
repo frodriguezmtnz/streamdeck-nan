@@ -24,7 +24,7 @@ Include:
 The following are in scope for security review:
 
 - Plugin bundle (`com.barbatdev.ai-usage.sdPlugin/`)
-- Source code (`src/`, `packages/`)
+- Source, native helper, scripts, and tests (`src/`, `native/`, `scripts/`, `test/`)
 - Build scripts and CI configuration
 - Deployment artifacts (`deploy/`)
 
@@ -46,4 +46,6 @@ The following are out of scope:
 - Claude CLI: discovered via absolute paths, symlinks resolved, identity revalidated before execution.
 - Codex CLI: spawn validated via absolute path, symlink check, env allowlist, `shell: false`.
 - Grok CLI: spawn validated via env allowlist, `shell: false`.
-- All transports: `shell: false`, no credential inheritance, bounded response sizes.
+- CLI child environments exclude parent token and API-key variables. They deliberately retain `HOME` and applicable local provider configuration paths for authenticated local use: `CLAUDE_CONFIG_DIR` and `XDG_CONFIG_HOME` for Claude, and `XDG_CONFIG_HOME` for Codex and Grok when set.
+- The final validated-path-to-spawn interval remains a same-user filesystem residual shared by the Claude, Codex, and Grok CLI launches; it is not an atomic execution guarantee.
+- All transports: `shell: false` and bounded response sizes.

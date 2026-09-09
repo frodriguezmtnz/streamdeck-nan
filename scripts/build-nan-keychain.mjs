@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -20,12 +20,17 @@ export function nativeBuildPlan({ source, output, temporaryDirectory }) {
   ];
 }
 
+export async function ensureOutputParent(output) {
+  await mkdir(dirname(output), { recursive: true });
+}
+
 export async function buildNanKeychain({
   source = resolve("native/nan-keychain/NanKeychain.swift"),
   output = resolve("com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain"),
 } = {}) {
   const temporaryDirectory = await mkdtemp(join(tmpdir(), "nan-keychain-build-"));
   try {
+    await ensureOutputParent(output);
     for (const command of nativeBuildPlan({ source, output, temporaryDirectory })) {
       const result = spawnSync(command.executable, command.args, { stdio: "ignore" });
       if (result.status !== 0) throw new Error("NaN Keychain helper build unavailable");

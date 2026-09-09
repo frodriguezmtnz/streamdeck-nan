@@ -20,34 +20,51 @@ export function validateChecksum(content, artifactName, expectedDigest) {
   if (match[2] !== artifactName || match[1] !== expectedDigest) throw new Error("checksum name or digest does not match the release artifact");
 }
 
-export function validateNotarizationReceipt(content, artifactName, expectedDigest) {
-  let receipt;
-  try { receipt = JSON.parse(content); } catch { throw new Error("NOTARIZATION.json must contain valid JSON"); }
-  if (receipt.status !== "Accepted") throw new Error("NOTARIZATION.json must record an Accepted result");
-  if (typeof receipt.submissionId !== "string" || !receipt.submissionId) throw new Error("NOTARIZATION.json must record the Apple submission ID");
-  const exactArtifact = receipt.publishedArtifact?.name === artifactName && receipt.publishedArtifact.sha256 === expectedDigest;
-  if (receipt.submittedSha256 !== expectedDigest || !exactArtifact) {
-    throw new Error("NOTARIZATION.json must bind Accepted status to the exact published artifact");
-  }
-}
-
-export async function verifyRelease(root, tag, verifyArtifact = true, scanArtifact = true) {
+async function validateReleaseVersions(root, tag) {
   const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
   const manifest = JSON.parse(await readFile(join(root, "com.barbatdev.ai-usage.sdPlugin", "manifest.json"), "utf8"));
   validateVersions(tag, packageJson.version, manifest.Version);
-  if (!verifyArtifact) return;
+}
+
+async function validateReleaseArtifact(root) {
   const dist = join(root, "dist");
   const artifacts = (await readdir(dist)).filter((name) => name.endsWith(".streamDeckPlugin"));
   if (artifacts.length !== 1) throw new Error(`expected exactly one .streamDeckPlugin artifact, found ${artifacts.length}`);
-  const bytes = await readFile(join(dist, artifacts[0]));
+  const artifactName = basename(artifacts[0]);
+  const artifactPath = join(dist, artifactName);
+  const bytes = await readFile(artifactPath);
   const digest = createHash("sha256").update(bytes).digest("hex");
-  validateChecksum(await readFile(join(dist, "SHA256SUMS"), "utf8"), basename(artifacts[0]), digest);
-  validateNotarizationReceipt(await readFile(join(dist, "NOTARIZATION.json"), "utf8"), basename(artifacts[0]), digest);
-  if (scanArtifact) scanReleaseArtifact(join(dist, artifacts[0]));
+  validateChecksum(await readFile(join(dist, "SHA256SUMS"), "utf8"), artifactName, digest);
+  scanReleaseArtifact(artifactPath);
+}
+
+export async function verifyRelease(root, tag) {
+  await validateReleaseVersions(root, tag);
+  await validateReleaseArtifact(root);
+}
+
+export const verifyUnsignedCiArtifacts = verifyRelease;
+
+export function parseVerificationMode(mode) {
+  switch (mode) {
+    case undefined:
+    case "artifacts":
+    case "unsigned-ci":
+      return { artifacts: true };
+    case "versions":
+      return { artifacts: false };
+    default:
+      throw new Error(`unknown verification mode: ${mode}`);
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const [tag, mode = "artifacts"] = process.argv.slice(2);
-  if (!tag) throw new Error("usage: release-contract.mjs <vX.Y.Z> [versions]");
-  await verifyRelease(process.cwd(), tag, mode !== "versions");
+  const [tag, mode] = process.argv.slice(2);
+  if (!tag) throw new Error("usage: release-contract.mjs <vX.Y.Z> [versions|unsigned-ci]");
+  const verification = parseVerificationMode(mode);
+  if (!verification.artifacts) {
+    await validateReleaseVersions(process.cwd(), tag);
+  } else {
+    await verifyRelease(process.cwd(), tag);
+  }
 }

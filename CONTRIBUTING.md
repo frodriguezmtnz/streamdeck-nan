@@ -32,6 +32,10 @@ Include as much detail as possible:
 
 4. Submit a pull request with a clear description and any relevant screenshots or logs.
 
+## Project history
+
+Public history starts at the sanitized source import. Contributions proceed normally from that point; refer to the retained provenance notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Code Style
 
 - TypeScript strict mode is enforced.
@@ -43,8 +47,8 @@ Include as much detail as possible:
 By contributing, you agree that your contributions will be licensed under the
 MIT License.
 
-## Package metadata
+## Project metadata
 
-All packages in this workspace are marked `private: true` and are not published to npm.
-They are internal modules consumed by the Stream Deck plugin bundle.
+The root package is marked `private: true` and is not published to npm.
+The repository boundaries are plugin source (`src/`), native helper code (`native/`), build and release scripts (`scripts/`), and tests (`test/` and `scripts/*.test.mjs`).
 The `@barbatdev` scope matches the GitHub organization and provides a consistent name for internal development.

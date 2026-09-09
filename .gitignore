@@ -14,3 +14,9 @@ __pycache__/
 *.sqlite-shm
 # Local Pi runtime state
 .atl/
+
+# Local CodeGraph index
+.codegraph/
+
+# Generated NaN Keychain helper
+com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
