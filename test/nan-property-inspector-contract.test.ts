@@ -41,10 +41,15 @@ test("NaN model and total keypad panels stay isolated from dial and refresh cont
 
 test("NaN Dashboard branding and launcher preserve existing identities and external dials", () => {
   assert.equal(manifest.Name, "NaN Dashboard");
+  assert.equal(manifest.Description, "NaN Dashboard usage for Stream Deck+, with Claude, Codex, and experimental Grok integrations.");
   assert.equal(manifest.Category, "NaN Dashboard");
   assert.equal(manifest.Icon, "imgs/plugin/nan-dashboard");
   assert.equal(manifest.CategoryIcon, "imgs/plugin/nan-dashboard");
   assert.equal(manifest.UUID, "com.barbatdev.ai-usage");
+  assert.equal(manifest.Version, "1.0.3.0");
+  assert.equal(manifest.CodePath, "bin/plugin.js");
+  assert.equal(manifest.PropertyInspectorPath, "ui/property-inspector.html");
+  assert.equal(manifest.Nodejs.Version, "24");
   assert.equal(manifest.Author, "jbarbat");
   assert.equal(manifest.URL, "https://github.com/refactor-ia/streamdeck-nan");
 
@@ -54,6 +59,10 @@ test("NaN Dashboard branding and launcher preserve existing identities and exter
     "com.barbatdev.ai-usage.nan-total-tokens", "com.barbatdev.ai-usage.nan-monthly-tokens",
   ];
   for (const uuid of expectedExistingUuids) assert.ok(manifest.Actions.some(({ UUID }: { UUID: string }) => UUID === uuid), uuid);
+  const nanDial = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-demo");
+  assert.equal(nanDial.Name, "NaN Usage");
+  assert.equal(nanDial.Tooltip, "Shows NaN Dashboard quota");
+  assert.equal(nanDial.Encoder.TriggerDescription.Touch, "Refresh dashboard quota");
   assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.claude").Name, "External · Claude Usage");
   assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.codex").Name, "External · GPT / OpenAI Usage");
   assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.grok").Name, "External · Grok Usage (Experimental)");
@@ -69,7 +78,11 @@ test("NaN Dashboard branding and launcher preserve existing identities and exter
 });
 
 test("NaN Dashboard launcher inspector is settings-free and cannot request models", () => {
+  assert.match(inspector, /<title>NaN Dashboard settings<\/title>/);
+  assert.match(inspector, /const NAN_DEMO_ACTION = "com\.barbatdev\.ai-usage\.nan-demo"/);
   assert.match(inspector, /const NAN_DASHBOARD_ACTION = "com\.barbatdev\.ai-usage\.nan-dashboard"/);
+  assert.match(inspector, /send\("getSettings", \{ context \}\)/);
+  assert.match(inspector, /send\("setSettings", \{ context, payload: settings \}\)/);
   assert.match(inspector, /const isNanDashboardLauncher = actionUuid === NAN_DASHBOARD_ACTION/);
   assert.match(inspector, /#refreshSettings"\)\.hidden = isNanDemo \|\| isNanModel \|\| isNanMetrics \|\| isNanDashboardLauncher/);
   assert.match(inspector, /#nanSettings"\)\.hidden = !isNanDemo/);

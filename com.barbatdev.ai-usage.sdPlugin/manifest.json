@@ -5,7 +5,7 @@
   "Version": "1.0.3.0",
   "Author": "jbarbat",
   "URL": "https://github.com/refactor-ia/streamdeck-nan",
-  "Description": "Monitor AI service usage limits on your StreamDeck+",
+  "Description": "NaN Dashboard usage for Stream Deck+, with Claude, Codex, and experimental Grok integrations.",
   "Icon": "imgs/plugin/nan-dashboard",
   "Category": "NaN Dashboard",
   "CategoryIcon": "imgs/plugin/nan-dashboard",
@@ -82,14 +82,14 @@
       "UUID": "com.barbatdev.ai-usage.nan-demo",
       "Name": "NaN Usage",
       "Icon": "imgs/plugin/plugin-icon",
-      "Tooltip": "Shows NaN dashboard quota or legacy observed monthly usage",
+      "Tooltip": "Shows NaN Dashboard quota",
       "Controllers": [
         "Encoder"
       ],
       "Encoder": {
         "layout": "layouts/nan.json",
         "TriggerDescription": {
-          "Touch": "Refresh observed usage"
+          "Touch": "Refresh dashboard quota"
         }
       },
       "States": [
@@ -102,7 +102,7 @@
       "UUID": "com.barbatdev.ai-usage.nan-model-usage",
       "Name": "NaN Model Usage",
       "Icon": "imgs/actions/nan-model/nan-model",
-      "Tooltip": "Shows dashboard consumption for one selected NaN model",
+      "Tooltip": "Shows NaN Dashboard consumption for one selected model",
       "Controllers": [
         "Keypad"
       ],
@@ -116,7 +116,7 @@
       "UUID": "com.barbatdev.ai-usage.nan-total-tokens",
       "Name": "NaN Total Tokens",
       "Icon": "imgs/actions/nan-model/nan-model",
-      "Tooltip": "Shows all-time NaN dashboard tokens",
+      "Tooltip": "Shows all-time NaN Dashboard tokens",
       "Controllers": [
         "Keypad"
       ],
@@ -130,7 +130,7 @@
       "UUID": "com.barbatdev.ai-usage.nan-monthly-tokens",
       "Name": "NaN Monthly Tokens",
       "Icon": "imgs/actions/nan-model/nan-model",
-      "Tooltip": "Shows month-to-date NaN dashboard tokens",
+      "Tooltip": "Shows month-to-date NaN Dashboard tokens",
       "Controllers": [
         "Keypad"
       ],
