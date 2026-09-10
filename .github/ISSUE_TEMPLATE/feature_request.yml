@@ -1,0 +1,79 @@
+name: Feature Request
+description: Suggest a focused feature or enhancement for streamdeck-nan.
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve streamdeck-nan. Focused feature requests and meta trackers for clearly related work are welcome.
+
+        Filing an issue does not authorize implementation. Please describe the problem, proposed scope, and any maintainer actions needed so the request can be evaluated independently.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      description: Please check for an existing request before filing a new one.
+      options:
+        - label: I searched the [existing issues](https://github.com/refactor-ia/streamdeck-nan/issues) and did not find a duplicate.
+          required: true
+
+  - type: dropdown
+    id: affected-area
+    attributes:
+      label: Affected Area
+      description: Which area would this request primarily affect?
+      options:
+        - Authentication / onboarding
+        - Actions / property inspector
+        - Security / importer
+        - Build / CI / releases
+        - Documentation / branding
+        - Cross-cutting release readiness
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What user, maintainer, or release-readiness problem would this solve? Include the current behavior and who is affected.
+      placeholder: Describe the problem and its impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe a focused solution. You may include phased checkbox tasks, acceptance criteria, dependencies, and any MANUAL maintainer actions. A broad redesign is not required.
+      placeholder: |
+        Describe the proposed behavior and scope.
+
+        Optional planning details:
+        - [ ] Phase or task
+        - Acceptance criteria
+        - Dependencies
+        - MANUAL: maintainer action required
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives, workarounds, or narrower approaches have you considered?
+      placeholder: Describe alternatives or leave this blank.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add screenshots, mockups, links, or other context that would help evaluate this request.
+      placeholder: Add any relevant context or leave this blank.
+    validations:
+      required: false
