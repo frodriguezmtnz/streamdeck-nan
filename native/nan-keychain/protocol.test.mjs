@@ -8,7 +8,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const helper = fileURLToPath(new URL("../../com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain", import.meta.url));
+const helper = fileURLToPath(new URL("../../com.refactor-ia.nan.sdPlugin/bin/nan-keychain", import.meta.url));
 
 function rejectedWithoutKeychain(request) {
   const result = spawnSync(helper, [], { input: Buffer.from(`${JSON.stringify(request)}\n`, "utf8"), stdio: ["pipe", "pipe", "ignore"] });

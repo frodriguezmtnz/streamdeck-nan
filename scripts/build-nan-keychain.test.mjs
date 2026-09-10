@@ -31,7 +31,7 @@ test("native NaN Keychain build accepts an existing output parent directory", as
 test("native NaN Keychain build plan compiles macOS 13 arm64 and x86_64 then merges only the helper", () => {
   assert.deepEqual(nativeBuildPlan({
     source: "/repo/native/nan-keychain/NanKeychain.swift",
-    output: "/repo/com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain",
+    output: "/repo/com.refactor-ia.nan.sdPlugin/bin/nan-keychain",
     temporaryDirectory: "/tmp/nan-keychain",
   }), [
     {
@@ -44,7 +44,7 @@ test("native NaN Keychain build plan compiles macOS 13 arm64 and x86_64 then mer
     },
     {
       executable: "/usr/bin/lipo",
-      args: ["-create", "-output", "/repo/com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain", "/tmp/nan-keychain/nan-keychain-arm64", "/tmp/nan-keychain/nan-keychain-x86_64"],
+      args: ["-create", "-output", "/repo/com.refactor-ia.nan.sdPlugin/bin/nan-keychain", "/tmp/nan-keychain/nan-keychain-arm64", "/tmp/nan-keychain/nan-keychain-x86_64"],
     },
   ]);
 });

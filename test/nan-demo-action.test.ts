@@ -6,7 +6,7 @@ const actionSource = readFileSync("src/actions/nan-demo-usage.ts", "utf8");
 
 test("NaN runtime constructs only the dashboard controller and keeps the dial UUID", () => {
   const plugin = readFileSync("src/plugin.ts", "utf8");
-  assert.match(actionSource, /@action\(\{ UUID: "com\.barbatdev\.ai-usage\.nan-demo" \}\)/);
+  assert.match(actionSource, /@action\(\{ UUID: "com\.refactor-ia\.nan\.nan-demo" \}\)/);
   assert.doesNotMatch(actionSource, /NanSummaryProvider|MacOsNanCredentialStore|nan-summary-provider|nan-credential-store/);
   assert.doesNotMatch(plugin, /NanSummaryProvider|MacOsNanCredentialStore|nanProvider/);
   assert.match(plugin, /const nanDashboard = new NanDashboardController\(\)/);

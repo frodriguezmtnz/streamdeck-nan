@@ -18,7 +18,7 @@ const REFRESH_MODELS = "nan.modelUsage.refreshModels.v1";
 const MODELS = "nan.modelUsage.models.v1";
 
 /** Keypad-only live NaN dashboard quota view. Each key holds an exact returned model ID. */
-@action({ UUID: "com.barbatdev.ai-usage.nan-model-usage" })
+@action({ UUID: "com.refactor-ia.nan.nan-model-usage" })
 export class NanModelUsage extends SingletonAction<NanModelUsageSettings> {
   private readonly dashboard: NanDashboardController;
   private readonly visible = new Map<string, { action: KeyAction<NanModelUsageSettings>; settings: NanModelUsageSettings; epoch: number }>();

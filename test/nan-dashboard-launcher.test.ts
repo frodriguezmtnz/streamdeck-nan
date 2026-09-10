@@ -4,7 +4,7 @@ import { registerHooks } from "node:module";
 import test from "node:test";
 
 const actionUrl = new URL("../src/actions/nan-dashboard-launcher.ts", import.meta.url);
-const manifestUrl = new URL("../com.barbatdev.ai-usage.sdPlugin/manifest.json", import.meta.url);
+const manifestUrl = new URL("../com.refactor-ia.nan.sdPlugin/manifest.json", import.meta.url);
 const sdkUrl = "data:text/javascript," + encodeURIComponent(`
   export function action() { return () => {}; }
   export class SingletonAction {}
@@ -74,12 +74,12 @@ test("dashboard launcher logs one bounded warning without retrying or exposing a
 test("manifest identifies the NaN Dashboard plugin at its public repository URL", () => {
   const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
   assert.equal(manifest.URL, "https://github.com/refactor-ia/streamdeck-nan");
-  assert.equal(manifest.UUID, "com.barbatdev.ai-usage");
+  assert.equal(manifest.UUID, "com.refactor-ia.nan");
   assert.equal(manifest.Category, "NaN Dashboard");
 });
 
 test("launcher source has no settings, controller, polling, or session dependencies", () => {
   const source = readFileSync(actionUrl, "utf8");
-  assert.match(source, /@action\(\{ UUID: "com\.barbatdev\.ai-usage\.nan-dashboard" \}\)/);
+  assert.match(source, /@action\(\{ UUID: "com\.refactor-ia\.nan\.nan-dashboard" \}\)/);
   assert.doesNotMatch(source, /getSettings|setSettings|NanDashboardController|provider|poll|session|retry/i);
 });

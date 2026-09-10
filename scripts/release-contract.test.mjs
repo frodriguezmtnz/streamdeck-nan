@@ -19,11 +19,11 @@ const execFile = promisify(execFileCallback);
 async function createReleaseFixture() {
   const root = await mkdtemp(join(tmpdir(), "release-contract-"));
   const source = join(root, "artifact-source");
-  await mkdir(join(root, "com.barbatdev.ai-usage.sdPlugin"), { recursive: true });
+  await mkdir(join(root, "com.refactor-ia.nan.sdPlugin"), { recursive: true });
   await mkdir(join(root, "dist"));
   await mkdir(source);
   await writeFile(join(root, "package.json"), JSON.stringify({ version: "1.2.3" }));
-  await writeFile(join(root, "com.barbatdev.ai-usage.sdPlugin", "manifest.json"), JSON.stringify({ Version: "1.2.3.0" }));
+  await writeFile(join(root, "com.refactor-ia.nan.sdPlugin", "manifest.json"), JSON.stringify({ Version: "1.2.3.0" }));
   return { root, source };
 }
 

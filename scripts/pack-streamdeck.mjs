@@ -3,7 +3,7 @@ import { chmod, cp, mkdtemp, readdir, rm, stat, unlink, utimes } from "node:fs/p
 import { tmpdir } from "node:os";
 import { join, relative, resolve, sep } from "node:path";
 
-const pluginName = "com.barbatdev.ai-usage.sdPlugin";
+const pluginName = "com.refactor-ia.nan.sdPlugin";
 const streamDeckCli = resolve("node_modules", "@elgato", "cli", "bin", "streamdeck.mjs");
 const normalizedTime = new Date("2000-01-01T00:00:00.000Z");
 
@@ -62,7 +62,7 @@ try {
   const result = spawnSync(installedStreamDeckCli, ["pack", stagedPlugin, "--force", "--output", "dist", "--no-update-check"], { stdio: "inherit" });
   if (result.status !== 0) process.exit(result.status ?? 1);
   await normalizePermissions(stagedPlugin);
-  const artifact = resolve("dist", "com.barbatdev.ai-usage.streamDeckPlugin");
+  const artifact = resolve("dist", "com.refactor-ia.nan.streamDeckPlugin");
   await unlink(artifact);
   const archive = spawnSync("zip", ["-X", "-q", artifact, ...await filesUnder(stagedPlugin)], { cwd: staging, stdio: "inherit" });
   if (archive.status !== 0) process.exit(archive.status ?? 1);

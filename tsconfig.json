@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
-    "outDir": "com.barbatdev.ai-usage.sdPlugin/bin",
+    "outDir": "com.refactor-ia.nan.sdPlugin/bin",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,

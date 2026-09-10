@@ -66,12 +66,12 @@ abstract class NanMetricsUsage extends SingletonAction<NanMetricsSettings> {
   }
 }
 
-@action({ UUID: "com.barbatdev.ai-usage.nan-total-tokens" })
+@action({ UUID: "com.refactor-ia.nan.nan-total-tokens" })
 export class NanTotalTokensUsage extends NanMetricsUsage {
   constructor(dashboard: NanDashboardController) { super(dashboard, "allTime"); }
 }
 
-@action({ UUID: "com.barbatdev.ai-usage.nan-monthly-tokens" })
+@action({ UUID: "com.refactor-ia.nan.nan-monthly-tokens" })
 export class NanMonthlyTokensUsage extends NanMetricsUsage {
   constructor(dashboard: NanDashboardController) { super(dashboard, "monthToDate"); }
 }

@@ -1,9 +1,9 @@
 {
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-  "UUID": "com.barbatdev.ai-usage",
+  "UUID": "com.refactor-ia.nan",
   "Name": "NaN Dashboard",
-  "Version": "1.0.3.0",
-  "Author": "jbarbat",
+  "Version": "1.0.4.0",
+  "Author": "Refactor IA",
   "URL": "https://github.com/refactor-ia/streamdeck-nan",
   "Description": "NaN Dashboard usage for Stream Deck+, with Claude, Codex, and experimental Grok integrations.",
   "Icon": "imgs/plugin/nan-dashboard",
@@ -17,7 +17,7 @@
   },
   "Actions": [
     {
-      "UUID": "com.barbatdev.ai-usage.claude",
+      "UUID": "com.refactor-ia.nan.claude",
       "Name": "External · Claude Usage",
       "Icon": "imgs/actions/claude",
       "Tooltip": "Shows Claude Code usage limits",
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.codex",
+      "UUID": "com.refactor-ia.nan.codex",
       "Name": "External · GPT / OpenAI Usage",
       "Icon": "imgs/actions/codex",
       "Tooltip": "Shows GPT/OpenAI usage limits from Codex",
@@ -59,7 +59,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.grok",
+      "UUID": "com.refactor-ia.nan.grok",
       "Name": "External · Grok Usage (Experimental)",
       "Icon": "imgs/plugin/plugin-icon",
       "Tooltip": "Shows experimental Grok Build billing usage",
@@ -79,7 +79,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.nan-demo",
+      "UUID": "com.refactor-ia.nan.nan-demo",
       "Name": "NaN Usage",
       "Icon": "imgs/plugin/plugin-icon",
       "Tooltip": "Shows NaN Dashboard quota",
@@ -99,7 +99,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.nan-model-usage",
+      "UUID": "com.refactor-ia.nan.nan-model-usage",
       "Name": "NaN Model Usage",
       "Icon": "imgs/actions/nan-model/nan-model",
       "Tooltip": "Shows NaN Dashboard consumption for one selected model",
@@ -113,7 +113,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.nan-total-tokens",
+      "UUID": "com.refactor-ia.nan.nan-total-tokens",
       "Name": "NaN Total Tokens",
       "Icon": "imgs/actions/nan-model/nan-model",
       "Tooltip": "Shows all-time NaN Dashboard tokens",
@@ -127,7 +127,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.nan-monthly-tokens",
+      "UUID": "com.refactor-ia.nan.nan-monthly-tokens",
       "Name": "NaN Monthly Tokens",
       "Icon": "imgs/actions/nan-model/nan-model",
       "Tooltip": "Shows month-to-date NaN Dashboard tokens",
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "UUID": "com.barbatdev.ai-usage.nan-dashboard",
+      "UUID": "com.refactor-ia.nan.nan-dashboard",
       "Name": "NaN Dashboard",
       "Icon": "imgs/plugin/nan-dashboard",
       "Tooltip": "Open NaN Dashboard",

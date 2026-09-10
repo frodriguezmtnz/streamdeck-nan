@@ -23,7 +23,7 @@ Include:
 
 The following are in scope for security review:
 
-- Plugin bundle (`com.barbatdev.ai-usage.sdPlugin/`)
+- Plugin bundle (`com.refactor-ia.nan.sdPlugin/`)
 - Source, native helper, scripts, and tests (`src/`, `native/`, `scripts/`, `test/`)
 - Build scripts and CI configuration
 - Deployment artifacts (`deploy/`)

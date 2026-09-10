@@ -103,9 +103,9 @@ If you discover a security vulnerability, please report it privately. See
 
 ## Advanced Architecture and Status
 
-For installed-profile compatibility, the `com.barbatdev.ai-usage` plugin namespace and its action UUIDs—including `com.barbatdev.ai-usage.nan-demo`—are retained. Existing settings keys and Keychain item identities are also retained; this note does not expose secret values.
+The `com.refactor-ia.nan` migration recreates all eight Stream Deck buttons, so users add the new actions again after installing version 1.0.4. Existing NaN session compatibility is retained internally only; this documentation does not expose session or credential identities.
 
-The generated, tracked bundle at `com.barbatdev.ai-usage.sdPlugin/bin/plugin.js` keeps the plugin directory self-contained.
+The generated, tracked bundle at `com.refactor-ia.nan.sdPlugin/bin/plugin.js` keeps the plugin directory self-contained.
 
 ### NaN Dashboard Validation Status
 

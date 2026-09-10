@@ -14,7 +14,7 @@ import { UsageProviderCoordinator } from "../usage/provider-coordinator.js";
 import type { CoordinatedUsageResult } from "../usage/provider-coordinator.js";
 import { renderClaudeFeedback } from "./usage-feedback.js";
 
-@action({ UUID: "com.barbatdev.ai-usage.claude" })
+@action({ UUID: "com.refactor-ia.nan.claude" })
 export class ClaudeUsage extends RefreshingAction {
   private readonly coordinator: UsageProviderCoordinator;
   private lastResult: CoordinatedUsageResult | null = null;

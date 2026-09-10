@@ -8,7 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const pluginName = "com.barbatdev.ai-usage.sdPlugin";
+const pluginName = "com.refactor-ia.nan.sdPlugin";
 
 async function makeFixture() {
   const fixture = await mkdtemp(join(tmpdir(), "streamdeck-pack-test-"));
@@ -57,7 +57,7 @@ mkdirSync(join(stage, "logs"), { recursive: true });
 writeFileSync(join(stage, "logs", "tool.log"), "packaging tool log");
 writeFileSync(join(stage, "pack.log"), "packaging tool log");
 mkdirSync("dist", { recursive: true });
-writeFileSync(join("dist", "com.barbatdev.ai-usage.streamDeckPlugin"), "intermediate");
+writeFileSync(join("dist", "com.refactor-ia.nan.streamDeckPlugin"), "intermediate");
 writeFileSync(recordPath, JSON.stringify(record));
 `);
   for (const packageManager of ["pnpm", "npm", "npx"]) {

@@ -3,13 +3,13 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-const manifest = JSON.parse(readFileSync("com.barbatdev.ai-usage.sdPlugin/manifest.json", "utf8"));
-const inspector = readFileSync("com.barbatdev.ai-usage.sdPlugin/ui/property-inspector.html", "utf8");
-const layout = JSON.parse(readFileSync("com.barbatdev.ai-usage.sdPlugin/layouts/nan.json", "utf8"));
+const manifest = JSON.parse(readFileSync("com.refactor-ia.nan.sdPlugin/manifest.json", "utf8"));
+const inspector = readFileSync("com.refactor-ia.nan.sdPlugin/ui/property-inspector.html", "utf8");
+const layout = JSON.parse(readFileSync("com.refactor-ia.nan.sdPlugin/layouts/nan.json", "utf8"));
 const plugin = readFileSync("src/plugin.ts", "utf8");
 
-test("NaN encoder registration keeps the same UUID and dashboard-only construction", () => {
-  const action = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-demo");
+test("NaN encoder registration uses the migrated UUID and dashboard-only construction", () => {
+  const action = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-demo");
   assert.equal(action.Controllers[0], "Encoder");
   assert.equal(action.Encoder.layout, "layouts/nan.json");
   assert.equal(layout.id, "NanUsage");
@@ -27,9 +27,9 @@ test("NaN dial inspector offers dashboard import without legacy source or setup 
 });
 
 test("NaN model and total keypad panels stay isolated from dial and refresh controls", () => {
-  const model = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-model-usage");
+  const model = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-model-usage");
   assert.deepEqual(model.Controllers, ["Keypad"]);
-  for (const uuid of ["com.barbatdev.ai-usage.nan-total-tokens", "com.barbatdev.ai-usage.nan-monthly-tokens"]) {
+  for (const uuid of ["com.refactor-ia.nan.nan-total-tokens", "com.refactor-ia.nan.nan-monthly-tokens"]) {
     assert.deepEqual(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === uuid).Controllers, ["Keypad"]);
   }
   assert.match(inspector, /id="nanModelUsageSettings"/);
@@ -39,37 +39,37 @@ test("NaN model and total keypad panels stay isolated from dial and refresh cont
   assert.match(inspector, /#refreshSettings"\)\.hidden = isNanDemo \|\| isNanModel \|\| isNanMetrics/);
 });
 
-test("NaN Dashboard branding and launcher preserve existing identities and external dials", () => {
+test("NaN Dashboard branding and launcher use migrated identities and external dials", () => {
   assert.equal(manifest.Name, "NaN Dashboard");
   assert.equal(manifest.Description, "NaN Dashboard usage for Stream Deck+, with Claude, Codex, and experimental Grok integrations.");
   assert.equal(manifest.Category, "NaN Dashboard");
   assert.equal(manifest.Icon, "imgs/plugin/nan-dashboard");
   assert.equal(manifest.CategoryIcon, "imgs/plugin/nan-dashboard");
-  assert.equal(manifest.UUID, "com.barbatdev.ai-usage");
-  assert.equal(manifest.Version, "1.0.3.0");
+  assert.equal(manifest.UUID, "com.refactor-ia.nan");
+  assert.equal(manifest.Version, "1.0.4.0");
   assert.equal(manifest.CodePath, "bin/plugin.js");
   assert.equal(manifest.PropertyInspectorPath, "ui/property-inspector.html");
   assert.equal(manifest.Nodejs.Version, "24");
-  assert.equal(manifest.Author, "jbarbat");
+  assert.equal(manifest.Author, "Refactor IA");
   assert.equal(manifest.URL, "https://github.com/refactor-ia/streamdeck-nan");
 
   const expectedExistingUuids = [
-    "com.barbatdev.ai-usage.claude", "com.barbatdev.ai-usage.codex", "com.barbatdev.ai-usage.grok",
-    "com.barbatdev.ai-usage.nan-demo", "com.barbatdev.ai-usage.nan-model-usage",
-    "com.barbatdev.ai-usage.nan-total-tokens", "com.barbatdev.ai-usage.nan-monthly-tokens",
+    "com.refactor-ia.nan.claude", "com.refactor-ia.nan.codex", "com.refactor-ia.nan.grok",
+    "com.refactor-ia.nan.nan-demo", "com.refactor-ia.nan.nan-model-usage",
+    "com.refactor-ia.nan.nan-total-tokens", "com.refactor-ia.nan.nan-monthly-tokens",
   ];
   for (const uuid of expectedExistingUuids) assert.ok(manifest.Actions.some(({ UUID }: { UUID: string }) => UUID === uuid), uuid);
-  const nanDial = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-demo");
+  const nanDial = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-demo");
   assert.equal(nanDial.Name, "NaN Usage");
   assert.equal(nanDial.Tooltip, "Shows NaN Dashboard quota");
   assert.equal(nanDial.Encoder.TriggerDescription.Touch, "Refresh dashboard quota");
-  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.claude").Name, "External · Claude Usage");
-  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.codex").Name, "External · GPT / OpenAI Usage");
-  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.grok").Name, "External · Grok Usage (Experimental)");
+  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.claude").Name, "External · Claude Usage");
+  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.codex").Name, "External · GPT / OpenAI Usage");
+  assert.equal(manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.grok").Name, "External · Grok Usage (Experimental)");
 
-  const launcher = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-dashboard");
+  const launcher = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-dashboard");
   assert.deepEqual(launcher, {
-    UUID: "com.barbatdev.ai-usage.nan-dashboard", Name: "NaN Dashboard", Tooltip: "Open NaN Dashboard",
+    UUID: "com.refactor-ia.nan.nan-dashboard", Name: "NaN Dashboard", Tooltip: "Open NaN Dashboard",
     Icon: "imgs/plugin/nan-dashboard", Controllers: ["Keypad"], States: [{ Image: "imgs/plugin/nan-dashboard" }],
   });
   assert.match(plugin, /import \{ NanDashboardLauncher \} from "\.\/actions\/nan-dashboard-launcher\.js"/);
@@ -79,8 +79,8 @@ test("NaN Dashboard branding and launcher preserve existing identities and exter
 
 test("NaN Dashboard launcher inspector is settings-free and cannot request models", () => {
   assert.match(inspector, /<title>NaN Dashboard settings<\/title>/);
-  assert.match(inspector, /const NAN_DEMO_ACTION = "com\.barbatdev\.ai-usage\.nan-demo"/);
-  assert.match(inspector, /const NAN_DASHBOARD_ACTION = "com\.barbatdev\.ai-usage\.nan-dashboard"/);
+  assert.match(inspector, /const NAN_DEMO_ACTION = "com\.refactor-ia\.nan\.nan-demo"/);
+  assert.match(inspector, /const NAN_DASHBOARD_ACTION = "com\.refactor-ia\.nan\.nan-dashboard"/);
   assert.match(inspector, /send\("getSettings", \{ context \}\)/);
   assert.match(inspector, /send\("setSettings", \{ context, payload: settings \}\)/);
   assert.match(inspector, /const isNanDashboardLauncher = actionUuid === NAN_DASHBOARD_ACTION/);
@@ -93,8 +93,8 @@ test("NaN Dashboard launcher inspector is settings-free and cannot request model
 
 test("NaN runtime images are RGBA PNGs at required dimensions and the editable source is unchanged", () => {
   for (const [path, expectedSize] of [
-    ["com.barbatdev.ai-usage.sdPlugin/imgs/plugin/nan-dashboard.png", 72],
-    ["com.barbatdev.ai-usage.sdPlugin/imgs/plugin/nan-dashboard@2x.png", 144],
+    ["com.refactor-ia.nan.sdPlugin/imgs/plugin/nan-dashboard.png", 72],
+    ["com.refactor-ia.nan.sdPlugin/imgs/plugin/nan-dashboard@2x.png", 144],
   ] as const) {
     const png = readFileSync(path);
     assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);

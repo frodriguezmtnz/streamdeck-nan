@@ -10,7 +10,7 @@ Include as much detail as possible:
 - Steps to reproduce the issue
 - Expected vs. actual behavior
 - Plugin version and Stream Deck+ firmware
-- Relevant log files (`com.barbatdev.ai-usage.sdPlugin/logs/`)
+- Relevant log files (`com.refactor-ia.nan.sdPlugin/logs/`)
 
 ## Pull Requests
 

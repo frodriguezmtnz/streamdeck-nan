@@ -11,7 +11,7 @@ import { UsageProviderCoordinator } from "../usage/provider-coordinator.js";
 import type { CoordinatedUsageResult } from "../usage/provider-coordinator.js";
 import { renderGrokFeedback } from "./usage-feedback.js";
 
-@action({ UUID: "com.barbatdev.ai-usage.grok" })
+@action({ UUID: "com.refactor-ia.nan.grok" })
 export class GrokUsage extends RefreshingAction {
   private readonly coordinator: UsageProviderCoordinator;
   private lastResult: CoordinatedUsageResult | null = null;

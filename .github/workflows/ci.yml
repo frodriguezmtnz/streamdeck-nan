@@ -41,7 +41,7 @@ jobs:
         run: pnpm test:workspace
 
       - name: Verify plugin bundle is tracked
-        run: git ls-files --error-unmatch -- com.barbatdev.ai-usage.sdPlugin/bin/plugin.js
+        run: git ls-files --error-unmatch -- com.refactor-ia.nan.sdPlugin/bin/plugin.js
 
       - name: Build plugin bundle
         run: pnpm build
@@ -50,7 +50,7 @@ jobs:
         run: |
           # Rebuild and check for diff. If different, the bundle wasn't committed.
           pnpm build
-          if ! git diff --quiet -- com.barbatdev.ai-usage.sdPlugin/bin/plugin.js; then
+          if ! git diff --quiet -- com.refactor-ia.nan.sdPlugin/bin/plugin.js; then
             echo "::error::bundle rebuild produced a different bin/plugin.js. Run \`pnpm build\` and commit the result."
             exit 1
           fi
@@ -67,7 +67,7 @@ jobs:
           node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")" versions
           node -e "require('node:fs').rmSync('dist', { recursive: true, force: true })"
           pnpm build:nan-keychain
-          test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
+          test -x com.refactor-ia.nan.sdPlugin/bin/nan-keychain
           pnpm release:pack:verify
           (cd dist && shasum -a 256 *.streamDeckPlugin > SHA256SUMS)
           node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")" unsigned-ci
@@ -84,4 +84,4 @@ jobs:
         run: corepack enable && corepack prepare pnpm@11.13.0 --activate
       - run: pnpm check:links
       - name: Check release artifacts
-        run: test -f LICENSE && test -f SECURITY.md && test -f com.barbatdev.ai-usage.sdPlugin/LICENSE
+        run: test -f LICENSE && test -f SECURITY.md && test -f com.refactor-ia.nan.sdPlugin/LICENSE

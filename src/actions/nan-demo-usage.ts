@@ -20,7 +20,7 @@ export type NanDemoSettings = RefreshSettings & Partial<{
 
 const IMPORT_CHROME_SESSION_KIND = "nan.importChromeSession.v1";
 
-@action({ UUID: "com.barbatdev.ai-usage.nan-demo" })
+@action({ UUID: "com.refactor-ia.nan.nan-demo" })
 export class NanDemoUsage extends RefreshingAction<NanDemoSettings> {
   private readonly selectionGenerations = new Map<string, number>();
   private readonly desiredSettings = new Map<string, NanDemoSettings>();

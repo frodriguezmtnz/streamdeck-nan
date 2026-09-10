@@ -346,7 +346,7 @@ test("claude-usage-provider rejects nonzero telemetry including nested token and
 
 test("versioned bundle contains hardened CLI telemetry and no Claude private credential path", async () => {
   const { readFile } = await import("node:fs/promises");
-  const bundle = await readFile("com.barbatdev.ai-usage.sdPlugin/bin/plugin.js", "utf8");
+  const bundle = await readFile("com.refactor-ia.nan.sdPlugin/bin/plugin.js", "utf8");
   assert.match(bundle, /"-p",\s*"\/usage",\s*"--tools",\s*"",\s*"--output-format",\s*"json"/);
   assert.doesNotMatch(bundle, /--safe-mode/);
   assert.match(bundle, /realpath/);

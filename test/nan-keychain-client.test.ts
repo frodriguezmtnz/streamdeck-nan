@@ -10,7 +10,7 @@ import {
 
 test("NaN Keychain client uses a fixed absolute helper and stdin-only secret writes", async () => {
   const requests: Array<{ executable: string; args: readonly string[]; stdin: string; timeoutMs: number; maxStdoutBytes: number }> = [];
-  const helperPath = resolveNanKeychainHelperPath("file:///Applications/com.barbatdev.ai-usage.sdPlugin/bin/plugin.js");
+  const helperPath = resolveNanKeychainHelperPath("file:///Applications/com.refactor-ia.nan.sdPlugin/bin/plugin.js");
   const client = new NanKeychainClient(async (request) => {
     requests.push(request);
     return { exitCode: 0, stdout: "{\"ok\":true}\n" };
@@ -19,7 +19,7 @@ test("NaN Keychain client uses a fixed absolute helper and stdin-only secret wri
   await client.putSessionCache("session-secret");
   await client.deleteSessionCache();
 
-  assert.equal(helperPath, "/Applications/com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain");
+  assert.equal(helperPath, "/Applications/com.refactor-ia.nan.sdPlugin/bin/nan-keychain");
   assert.equal(requests[0].executable, helperPath);
   assert.deepEqual(requests.map(({ args }) => args), [[], []]);
   assert.deepEqual(requests.map(({ stdin }) => stdin), [

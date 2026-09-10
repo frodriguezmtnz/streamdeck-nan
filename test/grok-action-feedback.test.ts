@@ -72,9 +72,9 @@ test("renderGrokFeedback with showCountdown shows percentage when resetsAt expir
 });
 
 test("Grok manifest registration points at a dedicated persistently experimental layout", async () => {
-  const manifest = JSON.parse(await readFile("com.barbatdev.ai-usage.sdPlugin/manifest.json", "utf8"));
-  const grok = manifest.Actions.find((entry: { UUID: string }) => entry.UUID === "com.barbatdev.ai-usage.grok");
-  const layout = JSON.parse(await readFile("com.barbatdev.ai-usage.sdPlugin/layouts/grok.json", "utf8"));
+  const manifest = JSON.parse(await readFile("com.refactor-ia.nan.sdPlugin/manifest.json", "utf8"));
+  const grok = manifest.Actions.find((entry: { UUID: string }) => entry.UUID === "com.refactor-ia.nan.grok");
+  const layout = JSON.parse(await readFile("com.refactor-ia.nan.sdPlugin/layouts/grok.json", "utf8"));
 
   assert.equal(grok.Name, "External · Grok Usage (Experimental)");
   assert.equal(grok.Encoder.layout, "layouts/grok.json");

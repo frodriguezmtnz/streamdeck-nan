@@ -24,12 +24,12 @@ jobs:
       - run: pnpm check:workspace
       - run: pnpm test:workspace
       - name: Verify plugin bundle is tracked
-        run: git ls-files --error-unmatch -- com.barbatdev.ai-usage.sdPlugin/bin/plugin.js
+        run: git ls-files --error-unmatch -- com.refactor-ia.nan.sdPlugin/bin/plugin.js
       - run: pnpm build
       - name: Build universal NaN Keychain helper
         run: pnpm build:nan-keychain
       - name: Verify universal NaN Keychain helper is executable
-        run: test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
+        run: test -x com.refactor-ia.nan.sdPlugin/bin/nan-keychain
       - run: pnpm scan:secrets
       - name: Gitleaks scan
         uses: ./.github/actions/gitleaks
@@ -39,7 +39,7 @@ jobs:
         run: |
           (cd dist && shasum -a 256 *.streamDeckPlugin > SHA256SUMS)
           node scripts/release-contract.mjs "$GITHUB_REF_NAME"
-          git diff --exit-code -- com.barbatdev.ai-usage.sdPlugin/manifest.json com.barbatdev.ai-usage.sdPlugin/bin/plugin.js
+          git diff --exit-code -- com.refactor-ia.nan.sdPlugin/manifest.json com.refactor-ia.nan.sdPlugin/bin/plugin.js
       - name: Upload verified release bytes
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

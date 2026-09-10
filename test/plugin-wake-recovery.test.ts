@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 test("manifest executable installs one ordered system wake recovery pipeline", () => {
-  const manifestPath = "com.barbatdev.ai-usage.sdPlugin/manifest.json";
+  const manifestPath = "com.refactor-ia.nan.sdPlugin/manifest.json";
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { CodePath: string };
   const executablePath = join(dirname(manifestPath), manifest.CodePath);
   assert.equal(statSync(executablePath).isFile(), true);
@@ -13,7 +13,7 @@ test("manifest executable installs one ordered system wake recovery pipeline", (
 });
 
 test("manifest executable contract rejects a bundle without wake wiring", () => {
-  const manifestPath = "com.barbatdev.ai-usage.sdPlugin/manifest.json";
+  const manifestPath = "com.refactor-ia.nan.sdPlugin/manifest.json";
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { CodePath: string };
   const plugin = readFileSync(join(dirname(manifestPath), manifest.CodePath), "utf8");
 

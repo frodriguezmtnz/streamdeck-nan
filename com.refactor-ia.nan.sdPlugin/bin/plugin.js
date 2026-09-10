@@ -1039,7 +1039,7 @@ function formatResetDate(value) {
 }
 
 let ClaudeUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.claude" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.claude" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -1720,7 +1720,7 @@ function isRecord$6(value) {
 }
 
 let CodexUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.codex" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.codex" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -2216,7 +2216,7 @@ function isRecord$4(value) {
 }
 
 let GrokUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.grok" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.grok" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -3352,7 +3352,7 @@ const defaultWatchScheduler = {
 
 const IMPORT_CHROME_SESSION_KIND = "nan.importChromeSession.v1";
 let NanDemoUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.nan-demo" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.nan-demo" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -3627,7 +3627,7 @@ const REFRESH_MODELS = "nan.modelUsage.refreshModels.v1";
 const MODELS = "nan.modelUsage.models.v1";
 /** Keypad-only live NaN dashboard quota view. Each key holds an exact returned model ID. */
 let NanModelUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.nan-model-usage" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.nan-model-usage" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -3817,7 +3817,7 @@ class NanMetricsUsage extends SingletonAction {
     }
 }
 let NanTotalTokensUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.nan-total-tokens" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.nan-total-tokens" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -3836,7 +3836,7 @@ let NanTotalTokensUsage = (() => {
     return _classThis;
 })();
 let NanMonthlyTokensUsage = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.nan-monthly-tokens" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.nan-monthly-tokens" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -3859,7 +3859,7 @@ const DASHBOARD_URL = "https://cloud.nan.builders/dashboard";
 const OPEN_FAILED_WARNING = "NaN Dashboard could not be opened.";
 /** Keypad-only launcher for the NaN Dashboard; it owns no settings or dashboard lifecycle. */
 let NanDashboardLauncher = (() => {
-    let _classDecorators = [action({ UUID: "com.barbatdev.ai-usage.nan-dashboard" })];
+    let _classDecorators = [action({ UUID: "com.refactor-ia.nan.nan-dashboard" })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;

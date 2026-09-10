@@ -4,7 +4,7 @@ import test from "node:test";
 import { GROK_ACP_METHODS } from "../src/providers/grok/grok-acp-contract.ts";
 
 const read = (path: string): string => readFileSync(path, "utf8");
-const manifest = JSON.parse(read("com.barbatdev.ai-usage.sdPlugin/manifest.json"));
+const manifest = JSON.parse(read("com.refactor-ia.nan.sdPlugin/manifest.json"));
 
 test("README documents the experimental local-CLI-only Grok boundary", () => {
   const readme = read("README.md");
@@ -15,9 +15,9 @@ test("README documents the experimental local-CLI-only Grok boundary", () => {
 });
 
 test("NaN surfaces describe dashboard import and a straightforward old-profile migration", () => {
-  const inspector = read("com.barbatdev.ai-usage.sdPlugin/ui/property-inspector.html");
+  const inspector = read("com.refactor-ia.nan.sdPlugin/ui/property-inspector.html");
   const readme = read("README.md");
-  const action = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.barbatdev.ai-usage.nan-demo");
+  const action = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-demo");
 
   assert.match(action.Tooltip, /NaN/i);
   assert.match(inspector, /Import session from Chrome/);

@@ -5,7 +5,7 @@ dist/
 .env
 .env.*
 !.env.example
-com.barbatdev.ai-usage.sdPlugin/logs/
+com.refactor-ia.nan.sdPlugin/logs/
 .ai/
 __pycache__/
 *.pyc
@@ -19,4 +19,4 @@ __pycache__/
 .codegraph/
 
 # Generated NaN Keychain helper
-com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain
+com.refactor-ia.nan.sdPlugin/bin/nan-keychain

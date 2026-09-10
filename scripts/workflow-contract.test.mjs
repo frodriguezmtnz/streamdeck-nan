@@ -21,7 +21,7 @@ function checkoutSteps(value) {
   return Object.values(value.jobs).flatMap(({ steps }) => steps).filter(({ uses }) => uses?.startsWith("actions/checkout@"));
 }
 
-const trackedBundlePath = "com.barbatdev.ai-usage.sdPlugin/bin/plugin.js";
+const trackedBundlePath = "com.refactor-ia.nan.sdPlugin/bin/plugin.js";
 const trackedBundleGate = `git ls-files --error-unmatch -- ${trackedBundlePath}`;
 
 function assertTrackedBundleGatePrecedesBuild(steps) {
@@ -35,7 +35,7 @@ function assertTrackedBundleGatePrecedesBuild(steps) {
 function assertCiBuildsExecutableHelperBeforePackaging(steps) {
   const commands = steps.map(({ run }) => run ?? "").join("\n");
   const helperBuildIndex = commands.indexOf("pnpm build:nan-keychain");
-  const helperCheckIndex = commands.indexOf("test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain");
+  const helperCheckIndex = commands.indexOf("test -x com.refactor-ia.nan.sdPlugin/bin/nan-keychain");
   const packageIndex = commands.indexOf("pnpm release:pack:verify");
   assert.ok(helperBuildIndex >= 0, "ordinary CI must build the native helper");
   assert.ok(helperCheckIndex >= 0, "ordinary CI must verify the native helper is executable");
@@ -99,7 +99,7 @@ test("CI triggers pushes and pull requests with read-only permissions", async ()
   assertCiBuildsExecutableHelperBeforePackaging(buildSteps);
   const ciCommands = buildSteps.map(({ run }) => run ?? "").join("\n");
   assert.match(ciCommands, /release-contract\.mjs.*unsigned-ci/);
-  assert.match(ciCommands, /git diff --quiet -- com\.barbatdev\.ai-usage\.sdPlugin\/bin\/plugin\.js/);
+  assert.match(ciCommands, /git diff --quiet -- com\.refactor-ia\.nan\.sdPlugin\/bin\/plugin\.js/);
 });
 
 test("release uses read-only packaging, artifact handoff, and isolated write publishing", async () => {
@@ -133,7 +133,7 @@ test("release uses read-only packaging, artifact handoff, and isolated write pub
   assert.equal(release.jobs.package.steps.find(({ uses }) => uses?.startsWith("actions/checkout@")).with["fetch-depth"], 0);
   assert.doesNotMatch(JSON.stringify(release), /APPLE_|sign-nan-keychain|notarize-streamdeck|NOTARIZATION\.json/i);
   const buildIndex = packageCommands.indexOf("pnpm build:nan-keychain");
-  const helperCheckIndex = packageCommands.indexOf("test -x com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain");
+  const helperCheckIndex = packageCommands.indexOf("test -x com.refactor-ia.nan.sdPlugin/bin/nan-keychain");
   const packIndex = packageCommands.indexOf("pnpm release:pack:verify");
   const checksumIndex = packageCommands.indexOf("shasum -a 256");
   assert.ok(buildIndex >= 0 && buildIndex < helperCheckIndex && helperCheckIndex < packIndex && packIndex < checksumIndex);

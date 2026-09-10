@@ -10,7 +10,7 @@ Build the universal `arm64` and `x86_64` helper into the plugin bundle with:
 pnpm build:nan-keychain
 ```
 
-The command requires installed Xcode Command Line Tools `xcrun swiftc` and `/usr/bin/lipo`; it writes only `com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain`. The helper reads a bounded JSON request from standard input, accepts no command-line selectors, and returns bounded JSON on standard output. Session-cache reads, writes, and deletes never permit authentication UI. Explicit Chrome Safe Storage import first reads without UI and makes at most one UI-enabled retry only when the noninteractive query reports interaction-required; cancellation and denial are never retried.
+The command requires installed Xcode Command Line Tools `xcrun swiftc` and `/usr/bin/lipo`; it writes only `com.refactor-ia.nan.sdPlugin/bin/nan-keychain`. The helper reads a bounded JSON request from standard input, accepts no command-line selectors, and returns bounded JSON on standard output. Session-cache reads, writes, and deletes never permit authentication UI. Explicit Chrome Safe Storage import first reads without UI and makes at most one UI-enabled retry only when the noninteractive query reports interaction-required; cancellation and denial are never retried.
 
 This local build is unsigned development evidence. It is not a distribution signing, notarization, Gatekeeper, or quarantine policy.
 

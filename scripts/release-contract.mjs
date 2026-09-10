@@ -22,7 +22,7 @@ export function validateChecksum(content, artifactName, expectedDigest) {
 
 async function validateReleaseVersions(root, tag) {
   const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-  const manifest = JSON.parse(await readFile(join(root, "com.barbatdev.ai-usage.sdPlugin", "manifest.json"), "utf8"));
+  const manifest = JSON.parse(await readFile(join(root, "com.refactor-ia.nan.sdPlugin", "manifest.json"), "utf8"));
   validateVersions(tag, packageJson.version, manifest.Version);
 }
 

@@ -73,9 +73,9 @@ test("collector retirement removes the closed cluster and its legacy runtime", a
 
 test("repository hygiene ignores generated native state without hiding the versioned bundle", async () => {
   assert.equal(await isIgnored(".codegraph/local-index"), true);
-  assert.equal(await isIgnored("com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain"), true);
-  assert.equal(await isIgnored("com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain.backup"), false);
-  assert.equal(await isIgnored("com.barbatdev.ai-usage.sdPlugin/bin/plugin.js"), false);
+  assert.equal(await isIgnored("com.refactor-ia.nan.sdPlugin/bin/nan-keychain"), true);
+  assert.equal(await isIgnored("com.refactor-ia.nan.sdPlugin/bin/nan-keychain.backup"), false);
+  assert.equal(await isIgnored("com.refactor-ia.nan.sdPlugin/bin/plugin.js"), false);
 
   const dockerignore = await source(".dockerignore");
   assert.doesNotMatch(dockerignore, /^!packages\/$/m);

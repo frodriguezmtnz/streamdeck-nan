@@ -36,7 +36,7 @@ test("reproducible packaging preserves executable mode only for the NaN Keychain
 
 test("private development package identity maps to the plugin version", async () => {
   const packageManifest = JSON.parse(await rootFile("package.json", "utf8"));
-  const pluginManifest = JSON.parse(await rootFile("com.barbatdev.ai-usage.sdPlugin/manifest.json", "utf8"));
+  const pluginManifest = JSON.parse(await rootFile("com.refactor-ia.nan.sdPlugin/manifest.json", "utf8"));
 
   assert.equal(packageManifest.name, "streamdeck-nan");
   assert.equal(packageManifest.private, true);
@@ -47,7 +47,7 @@ test("plugin package preserves root legal notices byte-for-byte", async () => {
   for (const file of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
     assert.deepEqual(
       await rootFile(file),
-      await rootFile(`com.barbatdev.ai-usage.sdPlugin/${file}`),
+      await rootFile(`com.refactor-ia.nan.sdPlugin/${file}`),
       `${file} must ship unchanged in the plugin package`,
     );
   }

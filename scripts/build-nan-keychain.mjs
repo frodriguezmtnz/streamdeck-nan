@@ -26,7 +26,7 @@ export async function ensureOutputParent(output) {
 
 export async function buildNanKeychain({
   source = resolve("native/nan-keychain/NanKeychain.swift"),
-  output = resolve("com.barbatdev.ai-usage.sdPlugin/bin/nan-keychain"),
+  output = resolve("com.refactor-ia.nan.sdPlugin/bin/nan-keychain"),
 } = {}) {
   const temporaryDirectory = await mkdtemp(join(tmpdir(), "nan-keychain-build-"));
   try {

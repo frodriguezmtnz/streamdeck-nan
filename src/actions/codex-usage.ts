@@ -13,7 +13,7 @@ import { UsageProviderCoordinator } from "../usage/provider-coordinator.js";
 import type { CoordinatedUsageResult } from "../usage/provider-coordinator.js";
 import { renderCodexFeedback } from "./usage-feedback.js";
 
-@action({ UUID: "com.barbatdev.ai-usage.codex" })
+@action({ UUID: "com.refactor-ia.nan.codex" })
 export class CodexUsage extends RefreshingAction {
   private readonly coordinator: UsageProviderCoordinator;
   private lastResult: CoordinatedUsageResult | null = null;
