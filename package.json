@@ -1,6 +1,6 @@
 {
   "name": "streamdeck-nan",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "packageManager": "pnpm@11.13.0",
   "type": "module",
@@ -12,7 +12,7 @@
     "release:pack": "node scripts/pack-streamdeck.mjs",
     "release:pack:verify": "node scripts/verify-pack-reproducibility.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
-    "test:release-contract": "node --test scripts/build-nan-keychain.test.mjs scripts/release-assets.test.mjs scripts/release-contract.test.mjs scripts/scan-secrets.test.mjs scripts/test-typescript-resolver.test.mjs scripts/workflow-contract.test.mjs",
+    "test:release-contract": "node --test scripts/build-nan-keychain.test.mjs scripts/release-assets.test.mjs scripts/release-contract.test.mjs scripts/scan-secrets.test.mjs scripts/standalone-package.test.mjs scripts/test-typescript-resolver.test.mjs scripts/workflow-contract.test.mjs",
     "check": "tsc --noEmit && pnpm exec streamdeck validate com.refactor-ia.nan.sdPlugin",
     "check:workspace": "pnpm check",
     "test": "pnpm build && node scripts/run-tests.mjs",
@@ -22,6 +22,8 @@
   "devDependencies": {
     "@elgato/cli": "1.7.4",
     "@elgato/streamdeck": "^2.0.0",
+    "@rollup/plugin-commonjs": "28.0.9",
+    "@rollup/plugin-node-resolve": "16.0.1",
     "@rollup/plugin-typescript": "^12.0.0",
     "@types/node": "^26.1.0",
     "rollup": "^4.0.0",
