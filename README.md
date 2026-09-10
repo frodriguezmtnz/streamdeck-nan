@@ -1,6 +1,13 @@
-# NaN Dashboard for Stream Deck+
+# NaN Dashboard for Stream Deck and Stream Deck+
 
-See your NaN account's usage limits and model usage on your Stream Deck+. Optional integrations also show usage from Claude Code, Codex, and experimental Grok.
+See your NaN account's usage limits and model usage on Stream Deck and Stream Deck+. Keypad buttons work on both devices; dials require Stream Deck+. Optional integrations also show usage from Claude Code, Codex, and experimental Grok.
+
+## Overview
+
+<p align="center">
+  <img src="docs/screenshots/nan-dashboard-overview.png" alt="NaN Dashboard usage in the Stream Deck+ app" width="620">
+</p>
+<p align="center"><em>NaN Dashboard in the Stream Deck+ app. Usage shown is an example and varies by account.</em></p>
 
 ## Primary Features
 
@@ -16,7 +23,7 @@ See your NaN account's usage limits and model usage on your Stream Deck+. Option
 
 - A Mac running **macOS 13 or later**. Windows and Linux are not supported.
 - The **Elgato Stream Deck app, version 7.1 or later**, installed on your Mac.
-- A **Stream Deck+** for first-time NaN setup: the session-import button is currently available through its **NaN Usage** dial action. Some actions also work on regular keys, but those actions cannot perform the initial session import.
+- A **Stream Deck+** for first-time NaN setup: the session-import button is currently available through its **NaN Usage** dial action. Keypad buttons work on both Stream Deck and Stream Deck+, but cannot perform the initial session import.
 - **Google Chrome**, signed in to your NaN account with your NaN dashboard open.
 
 ### 1. Download the installer
@@ -46,6 +53,11 @@ The plugin is installed, but it still needs access to your NaN session before it
 
 You do not need to copy a cookie, token, or API key. Session import happens only when you request it; installing the plugin does not automatically sign you in.
 
+<p align="center">
+  <img src="docs/screenshots/nan-dial-actions.png" alt="NaN dial actions listed in the Stream Deck+ app" width="520">
+</p>
+<p align="center"><em>NaN dial actions are available on Stream Deck+.</em></p>
+
 ### 4. Add a model button
 
 1. Drag **NaN Model Usage** onto a regular key position in the Stream Deck app.
@@ -54,6 +66,11 @@ You do not need to copy a cookie, token, or API key. Session import happens only
 4. Press the physical key to refresh its usage.
 
 You can also add **NaN Total Tokens** or **NaN Monthly Tokens** to regular keys. **NaN Dashboard** only opens the dashboard in your browser; it does not connect your session or load usage data.
+
+<p align="center">
+  <img src="docs/screenshots/nan-keypad-actions.png" alt="NaN keypad actions listed in the Stream Deck app" width="520">
+</p>
+<p align="center"><em>NaN keypad actions work on both Stream Deck and Stream Deck+.</em></p>
 
 ### Updating an existing installation
 
@@ -116,8 +133,6 @@ Watch source files and restart the plugin after each build:
 ```sh
 pnpm watch
 ```
-
-No final genuine Stream Deck screenshot is currently available; it remains a development limitation rather than a placeholder asset.
 
 ## Security and Privacy
 
