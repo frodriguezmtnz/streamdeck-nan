@@ -9,6 +9,113 @@ const quota = {
   uncappedModels: [{ model: "uncapped-qwen", tokensUsed: 42_000, resetAt: null, windowHours: 4 }],
 };
 
+function cappedSvg(percentage: number, stale = false): string {
+  return renderNanModelUsageSvg({ source: "dashboard", quota: { ...quota, models: [{ ...quota.models[0], percentage }] }, stale }, { model: "qwen3.8-flash" });
+}
+
+
+function contrast(first: string, second: string): number {
+  const luminance = (value: string): number => {
+    const channels = value.slice(1).match(/.{2}/g)!.map((channel) => Number.parseInt(channel, 16) / 255);
+    const linear = channels.map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  };
+  const [lighter, darker] = [luminance(first), luminance(second)].sort((left, right) => right - left);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function renderedBackground(svg: string): string {
+  return svg.match(/<rect width="72" height="72" rx="6" fill="(#[A-Fa-f0-9]+)"\/>/)![1]!;
+}
+
+test("capped models choose normal, amber, and red tiers from their raw unrounded percentage", () => {
+  for (const [percentage, displayed, background, foreground, frame] of [
+    [79.99, "80", "#06080f", "#b7cc85", undefined],
+    [80, "80", "#06080f", "#b7cc85", undefined],
+    [80.01, "80", "#FFC247", "#161616", "#161616"],
+    [90, "90", "#FFC247", "#161616", "#161616"],
+    [90.01, "90", "#9D1020", "#FFF5F6", "#FFF5F6"],
+    [91, "91", "#9D1020", "#FFF5F6", "#FFF5F6"],
+    [100, "100", "#9D1020", "#FFF5F6", "#FFF5F6"],
+    [125, "125", "#9D1020", "#FFF5F6", "#FFF5F6"],
+  ] as const) {
+    const svg = cappedSvg(percentage);
+    assert.equal(renderedBackground(svg), background);
+    assert.match(svg, new RegExp(`>${displayed}%<\\/text>`));
+    assert.match(svg, new RegExp(`<text x="6" y="38" fill="${foreground}"`));
+    if (frame) assert.match(svg, new RegExp(`<rect x="2" y="2" width="68" height="68" rx="4" fill="none" stroke="${frame}" stroke-width="3"\\/>`));
+    else assert.doesNotMatch(svg, /stroke-width="3"/);
+  }
+});
+
+test("warning tiers retain content, use approved geometry, and clamp their visible gauges", () => {
+  for (const [percentage, foreground, width] of [[80.01, "#161616", "48.01"], [90, "#161616", "54.00"], [91, "#FFF5F6", "54.60"], [100, "#FFF5F6", "60.00"], [125, "#FFF5F6", "60.00"]] as const) {
+    const svg = cappedSvg(percentage);
+    assert.match(svg, /width="72" height="72" viewBox="0 0 72 72"/);
+    assert.match(svg, />USED 125K<\/text>/);
+    assert.match(svg, />CAP 100K · OCT 1<\/text>/);
+    assert.match(svg, new RegExp(`<rect x="6" y="58" width="60" height="2" rx="1" fill="#[A-Fa-f0-9]+"\\/><rect x="6" y="58" width="${width}" height="2" rx="1" fill="${foreground}"\\/>`));
+    assert.match(svg, new RegExp(`<text x="6" y="67" fill="${foreground}"`));
+    assert.doesNotMatch(svg, /WARNING/);
+  }
+});
+
+test("stale amber and red tiers retain a legible palette-adapted status", () => {
+  for (const [percentage, background, foreground] of [[80.01, "#FFC247", "#161616"], [91, "#9D1020", "#FFF5F6"]] as const) {
+    const svg = cappedSvg(percentage, true);
+    assert.equal(renderedBackground(svg), background);
+    assert.match(svg, new RegExp(`<text x="6" y="67" fill="${foreground}"[^>]*>STALE<\\/text>`));
+    assert.ok(contrast(foreground, renderedBackground(svg)) >= 4.5, `stale ${percentage} status must meet text contrast`);
+  }
+});
+
+test("warning rendering uses actual SVG foreground and frame colors with sufficient contrast", () => {
+  for (const svg of [cappedSvg(80.01), cappedSvg(91)]) {
+    const background = renderedBackground(svg);
+    const foreground = svg.match(/<text x="6" y="38" fill="(#[A-Fa-f0-9]+)"/)![1]!;
+    const frame = svg.match(/<rect x="2" y="2" width="68" height="68" rx="4" fill="none" stroke="(#[A-Fa-f0-9]+)"/)![1]!;
+    assert.ok(contrast(foreground, background) >= 4.5, `${foreground} must meet text contrast`);
+    assert.ok(contrast(frame, background) >= 3, `${frame} must meet frame contrast`);
+  }
+});
+
+test("red, amber, and normal renders transition without retaining warning presentation", () => {
+  const red = cappedSvg(91);
+  const amber = cappedSvg(90);
+  const normal = cappedSvg(80);
+  assert.equal(renderedBackground(red), "#9D1020");
+  assert.equal(renderedBackground(amber), "#FFC247");
+  assert.equal(renderedBackground(normal), "#06080f");
+  assert.match(normal, /<rect x="6" y="4" width="60" height="1" fill="#7fb4ca"\/>/);
+  assert.match(normal, /<rect x="6" y="60" width="60" height="3" rx="1.5" fill="#202633"\/>/);
+  assert.match(normal, /<text x="6" y="70" fill="#b7cc85"[^>]*>LIVE<\/text>/);
+  assert.doesNotMatch(normal, /stroke-width="3"|y="58"/);
+});
+
+test("warning styling does not affect stale normal, uncapped, metrics-only, unselected, unavailable, or import routes", () => {
+  const ready: NanDashboardUsage = { source: "dashboard", quota, stale: false };
+  const staleNormal = cappedSvg(80, true);
+  const uncapped = renderNanModelUsageSvg(ready, { model: "uncapped-qwen" });
+  const unselected = renderNanModelUsageSvg(ready, {});
+  const metrics = {
+    last24h: { totalTokens: 0, byModel: [] }, last30d: { totalTokens: 0, byModel: [] },
+    monthToDate: { totalTokens: 15, byModel: [{ model: "metrics-only", inputTokens: 10, outputTokens: 5, totalTokens: 15 }] }, allTime: { totalTokens: 0, byModel: [] },
+  };
+  const metricsOnly = renderNanModelUsageSvg({ source: "dashboard", metrics, stale: false }, { model: "metrics-only" });
+  const unavailable = renderNanModelUsageSvg({ source: "dashboard", stale: false }, { model: "qwen3.8-flash" });
+  const importing = renderNanModelUsageSvg({ source: "dashboard", stale: false, error: "needs-import" }, { model: "qwen3.8-flash" });
+  assert.match(staleNormal, /<text x="6" y="70" fill="#cb7c94"[^>]*>STALE<\/text>/);
+  for (const svg of [staleNormal, uncapped, unselected, metricsOnly, unavailable, importing]) {
+    assert.equal(renderedBackground(svg), "#06080f");
+    assert.doesNotMatch(svg, /stroke-width="3"|y="58"/);
+  }
+  assert.match(uncapped, /UNCAPPED/);
+  assert.match(metricsOnly, /MONTH TOKENS/);
+  assert.match(unselected, /CHOOSE MODEL/);
+  assert.match(unavailable, /NO DATA/);
+  assert.match(importing, /IMPORT/);
+});
+
 test("model key gives over-cap consumption its own readable percentage, raw bands, and reset date", () => {
   const state: NanDashboardUsage = { source: "dashboard", quota, stale: false };
   const svg = renderNanModelUsageSvg(state, { model: "qwen3.8-flash" });
@@ -16,7 +123,7 @@ test("model key gives over-cap consumption its own readable percentage, raw band
   assert.match(svg, />USED 125K<\/text>/);
   assert.match(svg, />CAP 100K · OCT 1<\/text>/);
   assert.match(svg, /width="60"/);
-  assert.match(svg, /fill="#b7cc85"/);
+  assert.match(svg, /fill="#FFF5F6"/);
   assert.doesNotMatch(svg, /NaN MODEL/);
   assert.equal(renderNanModelUsageImage(state, { model: "qwen3.8-flash" }).startsWith("data:image/svg+xml,"), true);
 });
