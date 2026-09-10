@@ -1,6 +1,6 @@
 # NaN Dashboard for Stream Deck+
 
-NaN Dashboard is the primary Stream Deck+ experience for dashboard quota and model metrics; Claude, Codex, and experimental Grok are auxiliary external CLI integrations.
+See your NaN account's usage limits and model usage on your Stream Deck+. Optional integrations also show usage from Claude Code, Codex, and experimental Grok.
 
 ## Primary Features
 
@@ -8,16 +8,66 @@ NaN Dashboard is the primary Stream Deck+ experience for dashboard quota and mod
 - **NaN actions:** use a keypad launcher, per-model usage, all-time tokens, or month-to-date tokens without exposing session data in settings.
 - **External CLI dials:** optionally view local Claude Code, Codex, and experimental Grok Build usage through their installed, signed-in CLIs.
 
-## Quick Install, NaN Setup, and Use
+## Install on Your Mac
 
-1. Download the latest `.streamDeckPlugin` bundle from the [Releases](https://github.com/refactor-ia/streamdeck-nan/releases) page and double-click it to install.
-2. Add **NaN Usage** to a Stream Deck+ encoder. Choose **Import session from Chrome** in its inspector.
-3. Touch the encoder to refresh its dashboard quota. Add **NaN Model Usage**, **NaN Total Tokens**, or **NaN Monthly Tokens** to keypad positions as needed.
-4. Add **NaN Dashboard** to a standard keypad position and press it when you explicitly want to open the fixed dashboard URL. The launcher does not import a session, request metrics, refresh usage, or change settings.
+**You do not need to download the source code, install Node.js or pnpm, or use Terminal.** Download the installer, confirm installation in Stream Deck, then connect your NaN session as described below.
 
-**Requirements:** macOS 13 or later, Stream Deck 7.1 or later, and Stream Deck+ hardware for encoder actions. NaN Dashboard keypad actions are also available without an encoder.
+### Before you start
 
-The NaN Usage dial reads dashboard quota from the explicitly imported authenticated Chrome session. The plugin never reads Chrome or Chrome Safe Storage during appearance, refresh, rotation, settings, or wake handling. Dashboard values show provider quota (`used / cap`), raw percentage, and the API-provided reset or rolling window. A saved `legacy` source is migrated to `dashboard` once when its dial appears; all other settings and model IDs are preserved verbatim. Touching the dial refreshes its data; rotating it selects an API-returned capped model. **NaN Model Usage** selects one API-returned capped or uncapped model per key and refreshes the shared dashboard snapshot when pressed. If no dashboard session exists, import it explicitly from the existing NaN Usage dial. A transient dashboard failure keeps only the last dashboard quota as `STALE`; a rejected session returns to import onboarding without showing a prior account's quota.
+- A Mac running **macOS 13 or later**. Windows and Linux are not supported.
+- The **Elgato Stream Deck app, version 7.1 or later**, installed on your Mac.
+- A **Stream Deck+** for first-time NaN setup: the session-import button is currently available through its **NaN Usage** dial action. Some actions also work on regular keys, but those actions cannot perform the initial session import.
+- **Google Chrome**, signed in to your NaN account with your NaN dashboard open.
+
+### 1. Download the installer
+
+[**Download the latest macOS installer**](https://github.com/refactor-ia/streamdeck-nan/releases/latest/download/com.refactor-ia.nan.streamDeckPlugin)
+
+The file is named **`com.refactor-ia.nan.streamDeckPlugin`**.
+
+Alternatively, open the [latest release](https://github.com/refactor-ia/streamdeck-nan/releases/latest), expand **Assets**, and select that file. Do **not** download **Source code (zip)** or **Source code (tar.gz)** to install the plugin. `SHA256SUMS` is an optional download for verifying file integrity, not an installer.
+
+### 2. Install it in Stream Deck
+
+1. Open the downloaded `com.refactor-ia.nan.streamDeckPlugin` file, usually in your **Downloads** folder.
+2. Stream Deck should open. Confirm its installation or update prompt.
+3. Look for the **NaN** actions in the action list in Stream Deck.
+
+The plugin is installed, but it still needs access to your NaN session before it can display usage or list models.
+
+> **macOS security notice:** this plugin is distributed without Apple signing or notarization. If macOS blocks installation, stop and [report the exact message](https://github.com/refactor-ia/streamdeck-nan/issues). Do not disable system security protections. Opening the download alone does not mean installation has completed: confirm the Stream Deck prompt.
+
+### 3. Connect your NaN account
+
+1. In **Google Chrome**, make sure you are signed in to NaN and can view your dashboard.
+2. In the **Stream Deck app**, drag **NaN Usage** onto one of the Stream Deck+ dial positions (the positions for its physical knobs).
+3. Select that dial in the app. In its configuration panel, click **Import session from Chrome**.
+4. Wait for usage data to appear on the dial's display. Touch that display to refresh it.
+
+You do not need to copy a cookie, token, or API key. Session import happens only when you request it; installing the plugin does not automatically sign you in.
+
+### 4. Add a model button
+
+1. Drag **NaN Model Usage** onto a regular key position in the Stream Deck app.
+2. Select the new key and click **Refresh models** in its configuration panel.
+3. Choose a model from the **Model** dropdown. The list comes from your NaN account, so connect your session first.
+4. Press the physical key to refresh its usage.
+
+You can also add **NaN Total Tokens** or **NaN Monthly Tokens** to regular keys. **NaN Dashboard** only opens the dashboard in your browser; it does not connect your session or load usage data.
+
+### Updating an existing installation
+
+Download and open the latest installer, then confirm the update in Stream Deck. Updating from **v1.0.4 to v1.0.5** keeps the same action identifiers; you do not need to recreate those buttons or delete your saved NaN session for this fix.
+
+If you are upgrading from **v1.0.3 or earlier**, add the new actions again: v1.0.4 changed the plugin identity to Refactor IA. Old button placements are not migrated.
+
+### If something does not work
+
+- **The model list is empty:** check whether the **NaN Usage** dial shows usage data. For a first-time setup, complete step 3; if your session is already connected, click **Refresh models** on the model button instead of importing it again. Installing the plugin or opening the dashboard alone is not enough.
+- **The import button does nothing, or Stream Deck says the plugin is unstable:** make sure you installed **v1.0.5 or later**. Earlier standalone packages omitted a required runtime dependency; v1.0.5 fixes that startup problem.
+- **It still does not work:** [open an issue](https://github.com/refactor-ia/streamdeck-nan/issues) with your plugin, macOS, and Stream Deck app versions, the action you selected, and any visible error message. Never include cookies, tokens, passwords, or private account data.
+
+Keep the saved session unless there is a specific reason to replace it; an empty model list alone does not identify the cause.
 
 ## External Integrations and Requirements
 
@@ -106,6 +156,10 @@ If you discover a security vulnerability, please report it privately. See
 The `com.refactor-ia.nan` migration recreates all eight Stream Deck buttons, so users add the new actions again after installing version 1.0.4. Existing NaN session compatibility is retained internally only; this documentation does not expose session or credential identities.
 
 The generated, tracked bundle at `com.refactor-ia.nan.sdPlugin/bin/plugin.js` keeps the plugin directory self-contained.
+
+### Dashboard Behavior Details
+
+The NaN Usage dial reads dashboard quota from the explicitly imported authenticated Chrome session. The plugin never reads Chrome or Chrome Safe Storage during appearance, refresh, rotation, settings, or wake handling. Dashboard values show provider quota (`used / cap`), raw percentage, and the API-provided reset or rolling window. A saved `legacy` source is migrated to `dashboard` once when its dial appears; all other settings and model IDs are preserved verbatim. Touching the dial refreshes its data; rotating it selects an API-returned capped model. **NaN Model Usage** selects one API-returned capped or uncapped model per key and refreshes the shared dashboard snapshot when pressed. If no dashboard session exists, import it explicitly from the existing NaN Usage dial. A transient dashboard failure keeps only the last dashboard quota as `STALE`; a rejected session returns to import onboarding without showing a prior account's quota.
 
 ### NaN Dashboard Validation Status
 

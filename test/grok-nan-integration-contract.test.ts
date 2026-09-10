@@ -22,7 +22,7 @@ test("NaN surfaces describe dashboard import and a straightforward old-profile m
   assert.match(action.Tooltip, /NaN/i);
   assert.match(inspector, /Import session from Chrome/);
   assert.doesNotMatch(inspector, /Legacy collector|nanSource/i);
-  assert.match(readme, /^# NaN Dashboard for Stream Deck\+\n\nNaN Dashboard is the primary Stream Deck\+ experience for dashboard quota and model metrics; Claude, Codex, and experimental Grok are auxiliary external CLI integrations\./);
+  assert.match(readme, /^# NaN Dashboard for Stream Deck\+\n\nSee your NaN account's usage limits and model usage on your Stream Deck\+\. Optional integrations also show usage from Claude Code, Codex, and experimental Grok\./);
   assert.match(readme, /saved `legacy`[\s\S]*source is migrated to `dashboard` once/i);
   assert.doesNotMatch(readme, /collector-config|NaN Collector Deployment|Legacy collector/i);
 });
