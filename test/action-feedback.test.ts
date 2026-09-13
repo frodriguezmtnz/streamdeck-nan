@@ -21,6 +21,11 @@ test("formatCountdown returns null for expired dates", () => {
   assert.equal(formatCountdown(past), null);
 });
 
+test("formatCountdown switches to days above 24 hours so dial values stay short", () => {
+  const future = new Date(Date.now() + (5 * 24 + 10) * 3_600_000 + 30 * 60_000).toISOString();
+  assert.equal(formatCountdown(future), "5d 10h");
+});
+
 test("formatCountdown formats future dates correctly", () => {
   const futureMs = Date.now() + 3 * 3_600_000 + 25 * 60_000 + 10_000;
   const future = new Date(futureMs).toISOString();
@@ -47,8 +52,9 @@ test("NaN dashboard feedback preserves raw quota values and distinguishes safe e
     model: "capped", tokensUsed: 120, cap: 100, percentage: 120, resetAt: null, windowHours: 4,
   }], uncappedModels: [{ model: "uncapped", tokensUsed: 42, resetAt: null, windowHours: null }] };
   assert.deepEqual(renderNanDashboardFeedback({ source: "dashboard", quota, stale: false }, {}), {
-    title: "NaN", demo: "DASHBOARD", model: "capped", value: "120 / 100", unit: "120% · ROLLING 4H", status: "",
+    title: "NaN", demo: "DASHBOARD", model: "capped", value: "120 / 100", unit: "120% · ROLLING 4H", indicator: 100, status: "",
   });
+  assert.equal(renderNanDashboardFeedback({ source: "dashboard", quota: { ...quota, models: [{ ...quota.models[0], percentage: -5 }] }, stale: false }, {}).indicator, 0);
   assert.equal(renderNanDashboardFeedback({ source: "dashboard", quota, stale: true }, {}).status, "STALE");
   assert.equal(renderNanDashboardFeedback({ source: "dashboard", stale: false, error: "needs-import" }, {}).status, "IMPORT SESSION");
   assert.equal(renderNanDashboardFeedback({ source: "dashboard", quota: { ...quota, models: [], uncappedModels: [] }, stale: false }, {}).status, "NO QUOTA");
