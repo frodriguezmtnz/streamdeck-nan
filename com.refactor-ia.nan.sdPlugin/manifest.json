@@ -143,7 +143,7 @@
     {
       "UUID": "com.refactor-ia.nan.nan-dashboard",
       "Name": "NaN Dashboard",
-      "Icon": "imgs/plugin/nan-dashboard",
+      "Icon": "imgs/plugin/nan-category",
       "Tooltip": "Open NaN Dashboard",
       "Controllers": [
         "Keypad"
