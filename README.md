@@ -5,9 +5,12 @@ See your NaN account's usage limits and model usage on Stream Deck and Stream De
 ## Overview
 
 <p align="center">
-  <img src="docs/screenshots/nan-dashboard-overview.png" alt="NaN Dashboard usage in the Stream Deck+ app" width="620">
+  <img src="docs/gallery/nan-dashboard-overview.png" alt="NaN Dashboard actions on Stream Deck and Stream Deck+, showing example quota, model usage, and token data" width="960">
 </p>
 <p align="center"><em>NaN Dashboard in the Stream Deck+ app. Usage shown is an example and varies by account.</em></p>
+<p align="center">
+  More gallery views: <a href="docs/gallery/nan-usage-detail.png">usage detail</a> &middot; <a href="docs/gallery/nan-setup.png">setup</a>
+</p>
 
 ## Primary Features
 
