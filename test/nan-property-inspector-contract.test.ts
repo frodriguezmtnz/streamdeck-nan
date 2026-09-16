@@ -104,7 +104,7 @@ test("NaN Dashboard branding and launcher use migrated identities and external d
   assert.equal(manifest.Category, "NaN Dashboard");
   assert.equal(manifest.Icon, "imgs/plugin/nan-dashboard");
   assert.equal(manifest.UUID, "com.refactor-ia.nan");
-  assert.equal(manifest.Version, "1.0.10.0");
+  assert.equal(manifest.Version, "1.0.11.0");
   assert.equal(manifest.SDKVersion, 3);
   assert.equal(manifest.CodePath, "bin/plugin.js");
   assert.equal(manifest.PropertyInspectorPath, "ui/property-inspector.html");
@@ -129,7 +129,7 @@ test("NaN Dashboard branding and launcher use migrated identities and external d
   const launcher = manifest.Actions.find(({ UUID }: { UUID: string }) => UUID === "com.refactor-ia.nan.nan-dashboard");
   assert.deepEqual(launcher, {
     UUID: "com.refactor-ia.nan.nan-dashboard", Name: "NaN Dashboard", Tooltip: "Open NaN Dashboard",
-    Icon: "imgs/plugin/nan-dashboard", Controllers: ["Keypad"], States: [{ Image: "imgs/plugin/nan-dashboard" }],
+    Icon: "imgs/plugin/nan-category", Controllers: ["Keypad"], States: [{ Image: "imgs/plugin/nan-dashboard" }],
   });
   assert.match(plugin, /import \{ NanDashboardLauncher \} from "\.\/actions\/nan-dashboard-launcher\.js"/);
   assert.match(plugin, /const nanDashboardLauncher = new NanDashboardLauncher\(\)/);
@@ -251,12 +251,13 @@ test("NaN runtime images are RGBA PNGs at required dimensions and the editable s
   whiteMono("com.refactor-ia.nan.sdPlugin/imgs/actions/nan-usage/nan-usage.svg");
 });
 
-test("every action icon is a white monochrome SVG in the manifest", () => {
-  for (const action of (manifest.Actions as Array<{ UUID: string; Icon: string }>).filter((entry) => entry.Icon.startsWith("imgs/actions/"))) {
-    const path = `com.refactor-ia.nan.sdPlugin/${action.Icon}.svg`;
+test("every action and category icon is a white monochrome SVG in the manifest", () => {
+  const iconPaths = ["imgs/plugin/nan-category" as const, ...manifest.Actions.map(({ Icon }: { Icon: string }) => Icon)];
+  for (const icon of new Set(iconPaths)) {
+    const path = `com.refactor-ia.nan.sdPlugin/${icon}.svg`;
     const file = readFileSync(path, "utf8");
-    assert.match(file, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 100 100">/, `${action.UUID} icon must be an SVG on the 100x100 grid`);
-    assert.doesNotMatch(file, /#(?!FFFFFF\b)[0-9a-fA-F]{6}/, `${action.UUID} icon must only use white`);
-    assert.doesNotMatch(file, /<text|<image/, `${action.UUID} icon must be vector shapes only`);
+    assert.match(file, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 100 100">/, `${icon} icon must be an SVG on the 100x100 grid`);
+    assert.doesNotMatch(file, /#(?!FFFFFF\b)[0-9a-fA-F]{6}/, `${icon} icon must only use white`);
+    assert.doesNotMatch(file, /<text|<image/, `${icon} icon must be vector shapes only`);
   }
 });
