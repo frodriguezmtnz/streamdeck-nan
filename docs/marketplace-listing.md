@@ -30,7 +30,8 @@ NaN, AI usage, quota, tokens, Claude, Codex, Grok, Stream Deck+
 | Asset | Source | Status |
 | --- | --- | --- |
 | App icon (1024×1024) | Render at upload time from `design-assets/nan-brand/source/nan-isotipo-color.svg` | Source of truth in repo |
-| Gallery screenshots | Real Stream Deck+ dial + keypad captures showing quota states | TODO: capture on hardware |
+| Gallery (upload in this order) | `docs/gallery/nan-hardware-hero.png`, `nan-hardware-desk.png` (hardware photos), then `nan-dashboard-overview.png`, `nan-usage-detail.png`, `nan-setup.png` (app compositions), then the demo MP4 (1920×1080) | Photos done 2026-09-16 |
+| Demo video | Short screen + hardware recording: add action, import session from Chrome, dial/keys update, touch to refresh. Also emailed to maker@elgato.com | TODO: record |
 | Category icon (in-manifest, white mono SVG) | `imgs/plugin/nan-category.svg` | Done |
 | Action icons (in-manifest, white mono SVG) | `imgs/actions/*/**.svg`, one per action on the 100×100 grid; the dashboard launcher keeps its PNG isotype | Done |
 
@@ -48,3 +49,7 @@ The Maker Console rejects submissions with `SDKVersion: 2` and DRM off. Per offi
 - Exact review checklist and privacy requirements for plugins that read browser cookies (declare Chrome access explicitly and link the privacy policy).
 - Whether unsigned bundles are accepted for review the same way direct distribution is, or whether signing (#14) should land first.
 - Screenshot dimensions/format required by the portal.
+
+## Review round 1 (2026-09-16, v1.0.11) — requires changes
+
+Feedback: (1) update product-page media to better showcase the product (reference: Elgato Volume Controller page and the gallery guidelines); (2) email a short demo video to maker@elgato.com so functionality can be verified. No technical objection was raised. Response: hardware photos added as the first two gallery items; demo video to be recorded and sent; resubmit the same version via Products → Versions.
