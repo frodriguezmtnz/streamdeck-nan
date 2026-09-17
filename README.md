@@ -24,8 +24,8 @@ See your NaN account's usage limits and model usage on Stream Deck and Stream De
 
 ### Before you start
 
-- A Mac running **macOS 13 or later**. Windows and Linux are not supported.
-- The **Elgato Stream Deck app, version 7.1 or later**, installed on your Mac.
+- **macOS 13 or later** for the full feature set. On **Windows 10 or later** the plugin loads, but session import and the external Claude, Codex, and Grok integrations are not yet available (Linux is not supported).
+- The **Elgato Stream Deck app, version 7.1 or later**.
 - A Stream Deck device with a free action position. **NaN Usage** requires Stream Deck+, while **NaN Model Usage**, **NaN Total Tokens**, and **NaN Monthly Tokens** can import a session from a regular keypad key on supported Stream Deck devices.
 - **Google Chrome**, signed in to your NaN account with your NaN dashboard open.
 
@@ -231,8 +231,12 @@ plugin.
 
 ### Platform Support
 
-The current manifest supports macOS only. Encoder actions target Stream Deck+;
-NaN Model Usage, NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard are also available as standard keypad actions.
+The manifest declares **macOS 13 or later** and **Windows 10 or later**. Windows
+support is in progress: the NaN Dashboard session import still requires macOS, and
+the external Claude, Codex, and Grok integrations are macOS-only (on Windows their
+dials show **MAC ONLY** rather than probing for local CLIs). Encoder actions target
+Stream Deck+; NaN Model Usage, NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard
+are also available as standard keypad actions.
 
 ## Contributing
 

@@ -16,6 +16,7 @@ export interface UsageSnapshot {
 export type UsageErrorCode =
   | "authentication"
   | "executable-not-found"
+  | "unsupported-platform"
   | "timeout"
   | "invalid-response"
   | "unavailable"
@@ -26,6 +27,7 @@ export const MAX_PROVIDER_RETRY_AFTER_MS = 24 * 60 * 60 * 1000;
 const safeErrorMessages: Record<UsageErrorCode, string> = {
   authentication: "Authentication is unavailable.",
   "executable-not-found": "The required command is unavailable.",
+  "unsupported-platform": "This integration is not supported on this operating system.",
   timeout: "The usage request timed out.",
   "invalid-response": "The usage response is invalid.",
   unavailable: "Usage is unavailable.",

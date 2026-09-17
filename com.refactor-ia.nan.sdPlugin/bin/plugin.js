@@ -9260,6 +9260,7 @@ const MAX_PROVIDER_RETRY_AFTER_MS = 24 * 60 * 60 * 1000;
 const safeErrorMessages = {
     authentication: "Authentication is unavailable.",
     "executable-not-found": "The required command is unavailable.",
+    "unsupported-platform": "This integration is not supported on this operating system.",
     timeout: "The usage request timed out.",
     "invalid-response": "The usage response is invalid.",
     unavailable: "Usage is unavailable.",
@@ -10085,11 +10086,14 @@ function formatCountdown(isoString) {
         return `${minutes}m ${seconds}s`;
     return "<1m";
 }
+function platformStatus(result) {
+    return result.error?.code === "unsupported-platform" ? "MAC ONLY" : undefined;
+}
 function renderClaudeFeedback(result, _showCountdown = false) {
     if (!result.ok) {
         return {
             title: "Claude",
-            status: "NO DATA",
+            status: platformStatus(result) ?? "NO DATA",
             sessionValue: "--",
             sessionBar: 0,
             weeklyValue: "--",
@@ -10119,7 +10123,7 @@ function renderCodexFeedback(result, showCountdown = false) {
             period: "WEEKLY",
             value: "--",
             indicator: 0,
-            status: "NO DATA",
+            status: platformStatus(result) ?? "NO DATA",
         };
     }
     const weekly = Math.min(100, Math.max(0, week.usedPercent));
@@ -10141,7 +10145,7 @@ function renderGrokFeedback(result, showCountdown = false) {
             period: "BILLING PERIOD",
             value: "--",
             indicator: 0,
-            status: "NO DATA",
+            status: platformStatus(result) ?? "NO DATA",
         };
     }
     const used = Math.min(100, Math.max(0, billing.usedPercent));
@@ -13186,7 +13190,7 @@ function withTimeout(operation, timeoutMs) {
 
 const allowedProviderIds = new Set(["claude", "codex", "grok", "nan"]);
 const allowedStates = new Set([
-    "authentication", "executable-not-found", "timeout", "invalid-response", "unavailable", "stopped",
+    "authentication", "executable-not-found", "unsupported-platform", "timeout", "invalid-response", "unavailable", "stopped",
     "missing-configuration", "invalid-configuration", "unavailable-credentials", "unavailable-fetch",
 ]);
 class TransitioningProviderStatusReporter {
@@ -13211,12 +13215,37 @@ class TransitioningProviderStatusReporter {
     }
 }
 
+class UnsupportedPlatformUsageProvider {
+    id;
+    constructor(id) {
+        this.id = id;
+    }
+    getUsage() {
+        return Promise.resolve({
+            ok: false,
+            error: new UsageProviderError("unsupported-platform"),
+        });
+    }
+    recoverAfterWake() { }
+    stop() {
+        return Promise.resolve();
+    }
+    stopImmediately() { }
+}
+
 const statusReporter = new TransitioningProviderStatusReporter((message) => streamDeck.logger.warn(message));
-const claudeProvider = new ClaudeUsageProvider();
+const externalUsageSupported = process.platform === "darwin";
+const claudeProvider = externalUsageSupported
+    ? new ClaudeUsageProvider()
+    : new UnsupportedPlatformUsageProvider("claude");
 const claudeCoordinator = new UsageProviderCoordinator(claudeProvider, { ...CLAUDE_COORDINATOR_OPTIONS, statusReporter });
-const codexProvider = new CodexUsageProvider();
+const codexProvider = externalUsageSupported
+    ? new CodexUsageProvider()
+    : new UnsupportedPlatformUsageProvider("codex");
 const codexCoordinator = new UsageProviderCoordinator(codexProvider, { statusReporter });
-const grokProvider = new GrokUsageProvider();
+const grokProvider = externalUsageSupported
+    ? new GrokUsageProvider()
+    : new UnsupportedPlatformUsageProvider("grok");
 const grokCoordinator = new UsageProviderCoordinator(grokProvider, { statusReporter });
 const claudeAction = new ClaudeUsage(claudeCoordinator);
 const codexAction = new CodexUsage(codexCoordinator);

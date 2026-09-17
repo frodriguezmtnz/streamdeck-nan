@@ -159,6 +159,10 @@
     {
       "Platform": "mac",
       "MinimumVersion": "13"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
     }
   ],
   "Software": {

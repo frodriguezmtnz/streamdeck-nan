@@ -14,17 +14,25 @@ import { GrokUsageProvider } from "./providers/grok/grok-usage-provider.js";
 import { installPluginShutdown } from "./plugin-shutdown.js";
 import { UsageProviderCoordinator } from "./usage/provider-coordinator.js";
 import { TransitioningProviderStatusReporter } from "./usage/provider-status-reporter.js";
+import { UnsupportedPlatformUsageProvider } from "./usage/unsupported-platform-provider.js";
 
 const statusReporter = new TransitioningProviderStatusReporter((message) => streamDeck.logger.warn(message));
 
-const claudeProvider = new ClaudeUsageProvider();
+const externalUsageSupported = process.platform === "darwin";
+const claudeProvider = externalUsageSupported
+  ? new ClaudeUsageProvider()
+  : new UnsupportedPlatformUsageProvider("claude");
 const claudeCoordinator = new UsageProviderCoordinator(
   claudeProvider,
   { ...CLAUDE_COORDINATOR_OPTIONS, statusReporter },
 );
-const codexProvider = new CodexUsageProvider();
+const codexProvider = externalUsageSupported
+  ? new CodexUsageProvider()
+  : new UnsupportedPlatformUsageProvider("codex");
 const codexCoordinator = new UsageProviderCoordinator(codexProvider, { statusReporter });
-const grokProvider = new GrokUsageProvider();
+const grokProvider = externalUsageSupported
+  ? new GrokUsageProvider()
+  : new UnsupportedPlatformUsageProvider("grok");
 const grokCoordinator = new UsageProviderCoordinator(grokProvider, { statusReporter });
 const claudeAction = new ClaudeUsage(claudeCoordinator);
 const codexAction = new CodexUsage(codexCoordinator);
