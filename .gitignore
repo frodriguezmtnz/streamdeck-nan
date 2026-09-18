@@ -20,3 +20,6 @@ __pycache__/
 
 # Generated NaN Keychain helper
 com.refactor-ia.nan.sdPlugin/bin/nan-keychain
+
+# Generated NaN DPAPI helper
+com.refactor-ia.nan.sdPlugin/bin/nan-dpapi.ps1
