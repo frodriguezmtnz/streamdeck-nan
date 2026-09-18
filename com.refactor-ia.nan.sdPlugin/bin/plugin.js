@@ -9284,7 +9284,7 @@ function sanitizeUsageError(error, fallback = "unavailable") {
         : new UsageProviderError(fallback);
 }
 function normalizeUsageSnapshot(value) {
-    if (!isRecord$9(value) || !Number.isFinite(value.observedAt) || !isRecord$9(value.windows)) {
+    if (!isRecord$a(value) || !Number.isFinite(value.observedAt) || !isRecord$a(value.windows)) {
         return undefined;
     }
     const windows = {};
@@ -9307,12 +9307,12 @@ function normalizeUsageSnapshot(value) {
     return { windows, observedAt: value.observedAt };
 }
 function isUsageWindow(value) {
-    return (isRecord$9(value) &&
+    return (isRecord$a(value) &&
         Number.isFinite(value.usedPercent) &&
         (value.windowMinutes === undefined || Number.isFinite(value.windowMinutes)) &&
         (value.resetsAt === undefined || typeof value.resetsAt === "string"));
 }
-function isRecord$9(value) {
+function isRecord$a(value) {
     return typeof value === "object" && value !== null;
 }
 
@@ -9574,7 +9574,7 @@ function parseClaudeUsage(stdout) {
     catch {
         return undefined;
     }
-    if (!isRecord$8(payload) || typeof payload.result !== "string" || !hasZeroInference(payload)) {
+    if (!isRecord$9(payload) || typeof payload.result !== "string" || !hasZeroInference(payload)) {
         return undefined;
     }
     const windows = {};
@@ -9598,8 +9598,8 @@ function hasZeroInference(payload) {
     if (payload.num_turns !== 0
         || payload.duration_api_ms !== 0
         || payload.total_cost_usd !== 0
-        || !isRecord$8(payload.usage)
-        || !isRecord$8(payload.modelUsage)
+        || !isRecord$9(payload.usage)
+        || !isRecord$9(payload.modelUsage)
         || Object.keys(payload.modelUsage).length !== 0)
         return false;
     const totals = hasOnlyZeroUsageTotals(payload.usage);
@@ -9614,7 +9614,7 @@ function hasOnlyZeroUsageTotals(value) {
             }
             found = true;
         }
-        else if (isRecord$8(item)) {
+        else if (isRecord$9(item)) {
             const nested = hasOnlyZeroUsageTotals(item);
             if (!nested.valid)
                 return nested;
@@ -9627,15 +9627,15 @@ function failure(code) {
     return { ok: false, error: new UsageProviderError(code) };
 }
 function errorCode(error) {
-    return isRecord$8(error) ? error.code : undefined;
+    return isRecord$9(error) ? error.code : undefined;
 }
 function isTimeout(error) {
-    return errorCode(error) === "ETIMEDOUT" || (isRecord$8(error) && error.killed === true);
+    return errorCode(error) === "ETIMEDOUT" || (isRecord$9(error) && error.killed === true);
 }
 function isMaxBufferError(error) {
     return errorCode(error) === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER";
 }
-function isRecord$8(value) {
+function isRecord$9(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -10621,7 +10621,7 @@ class CodexAppServerClient {
             this.terminate(new UsageProviderError("invalid-response"));
             return false;
         }
-        if (!isRecord$7(message) || !Number.isInteger(message.id))
+        if (!isRecord$8(message) || !Number.isInteger(message.id))
             return true;
         const id = message.id;
         const pending = this.pending.get(id);
@@ -10758,11 +10758,11 @@ class CodexAppServerClient {
 function classifyStartError(error) {
     if (error instanceof UsageProviderError)
         return error;
-    return isRecord$7(error) && error.code === "ENOENT"
+    return isRecord$8(error) && error.code === "ENOENT"
         ? new UsageProviderError("executable-not-found")
         : new UsageProviderError("unavailable");
 }
-function isRecord$7(value) {
+function isRecord$8(value) {
     return typeof value === "object" && value !== null;
 }
 function getImmediateStop(creation) {
@@ -10806,11 +10806,11 @@ class CodexUsageProvider {
     }
 }
 function parseRateLimits(value) {
-    if (!isRecord$6(value))
+    if (!isRecord$7(value))
         return undefined;
-    const rateLimits = isRecord$6(value.rateLimits)
+    const rateLimits = isRecord$7(value.rateLimits)
         ? value.rateLimits
-        : isRecord$6(value.rate_limits)
+        : isRecord$7(value.rate_limits)
             ? value.rate_limits
             : value;
     const windows = {};
@@ -10829,7 +10829,7 @@ function addWindow(windows, window, fallbackName) {
     windows[name] = window;
 }
 function parseWindow$1(value) {
-    if (!isRecord$6(value))
+    if (!isRecord$7(value))
         return undefined;
     const usedPercent = value.usedPercent ?? value.used_percent;
     if (!Number.isFinite(usedPercent))
@@ -10852,7 +10852,7 @@ function parseReset(value) {
     }
     return {};
 }
-function isRecord$6(value) {
+function isRecord$7(value) {
     return typeof value === "object" && value !== null;
 }
 
@@ -11136,7 +11136,7 @@ class ChildGrokAcpTransport {
             this.retire("invalid-response");
             return;
         }
-        if (!isRecord$5(value) || value.jsonrpc !== "2.0") {
+        if (!isRecord$6(value) || value.jsonrpc !== "2.0") {
             this.retire("invalid-response");
             return;
         }
@@ -11172,7 +11172,7 @@ class ChildGrokAcpTransport {
         this.pending.clear();
     }
 }
-function isRecord$5(value) {
+function isRecord$6(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -11312,13 +11312,13 @@ function createLifecycle() {
     return { sequence: 0, queue: Promise.resolve() };
 }
 function parseGrokBilling(value) {
-    if (!isRecord$4(value))
+    if (!isRecord$5(value))
         return undefined;
-    const payload = isRecord$4(value.result) ? value.result : value;
-    const config = isRecord$4(payload.config) ? payload.config : payload;
+    const payload = isRecord$5(value.result) ? value.result : value;
+    const config = isRecord$5(payload.config) ? payload.config : payload;
     let usedPercent;
     if (config.onDemandUsed !== undefined || config.onDemandCap !== undefined) {
-        if (!isRecord$4(config.onDemandUsed) || !isRecord$4(config.onDemandCap))
+        if (!isRecord$5(config.onDemandUsed) || !isRecord$5(config.onDemandCap))
             return undefined;
         const used = config.onDemandUsed.val;
         const cap = config.onDemandCap.val;
@@ -11342,13 +11342,13 @@ function parseGrokBilling(value) {
     }
     if (typeof usedPercent !== "number" || !Number.isFinite(usedPercent) || usedPercent < 0 || usedPercent > 100)
         return undefined;
-    const period = isRecord$4(config.currentPeriod) ? config.currentPeriod : undefined;
+    const period = isRecord$5(config.currentPeriod) ? config.currentPeriod : undefined;
     const resetsAt = period?.end ?? config.resetsAt ?? config.resets_at;
     if (resetsAt !== undefined && (typeof resetsAt !== "string" || Number.isNaN(Date.parse(resetsAt))))
         return undefined;
     return { usedPercent, ...(typeof resetsAt === "string" ? { resetsAt } : {}) };
 }
-function isRecord$4(value) {
+function isRecord$5(value) {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -11438,7 +11438,7 @@ class NanKeychainClient {
     async request(payload, expectsSecret, timeoutMs) {
         const stdin = `${JSON.stringify(payload)}\n`;
         if (Buffer.byteLength(stdin, "utf8") > NAN_KEYCHAIN_MAX_STDIN_BYTES)
-            throw unavailable$1();
+            throw unavailable$2();
         let result;
         try {
             result = await this.run({
@@ -11450,23 +11450,23 @@ class NanKeychainClient {
             });
         }
         catch {
-            throw unavailable$1();
+            throw unavailable$2();
         }
         if (result.exitCode !== 0 || Buffer.byteLength(result.stdout, "utf8") > NAN_KEYCHAIN_MAX_STDOUT_BYTES)
-            throw unavailable$1();
+            throw unavailable$2();
         let response;
         try {
             response = JSON.parse(result.stdout);
         }
         catch {
-            throw unavailable$1();
+            throw unavailable$2();
         }
-        if (!isRecord$3(response) || response.ok !== true)
-            throw unavailable$1();
+        if (!isRecord$4(response) || response.ok !== true)
+            throw unavailable$2();
         if (!expectsSecret)
             return;
         if (typeof response.secret !== "string" && response.secret !== null)
-            throw unavailable$1();
+            throw unavailable$2();
         return response.secret;
     }
 }
@@ -11476,7 +11476,7 @@ function runNanKeychain(request) {
         let stdout = "";
         let stdoutBytes = 0;
         const child = spawn(request.executable, [...request.args], {
-            env: {},
+            env: request.env ? { ...request.env } : {},
             shell: false,
             stdio: ["pipe", "pipe", "ignore"],
             windowsHide: true,
@@ -11490,7 +11490,7 @@ function runNanKeychain(request) {
         };
         const fail = () => finish(() => {
             child.kill("SIGKILL");
-            reject(unavailable$1());
+            reject(unavailable$2());
         });
         const timeout = setTimeout(fail, request.timeoutMs);
         child.once("error", fail);
@@ -11505,10 +11505,10 @@ function runNanKeychain(request) {
         child.stdin.end(request.stdin, "utf8");
     });
 }
-function unavailable$1() {
+function unavailable$2() {
     return new Error("Keychain helper unavailable");
 }
-function isRecord$3(value) {
+function isRecord$4(value) {
     return typeof value === "object" && value !== null;
 }
 
@@ -11949,7 +11949,7 @@ class NanDashboardMetricsClient {
     }
 }
 function parseNanDashboardMetrics(value) {
-    if (!isRecord$2(value))
+    if (!isRecord$3(value))
         throw new NanDashboardMetricsError("schema");
     const last24h = parseWindow(value.last24h);
     const last30d = parseWindow(value.last30d);
@@ -11958,7 +11958,7 @@ function parseNanDashboardMetrics(value) {
     return Object.freeze({ last24h, last30d, monthToDate, allTime });
 }
 function parseAllTimeWindow(value) {
-    if (!isRecord$2(value))
+    if (!isRecord$3(value))
         throw new NanDashboardMetricsError("schema");
     const window = parseWindow(value, true);
     if (value.cachedAt === undefined)
@@ -11968,13 +11968,13 @@ function parseAllTimeWindow(value) {
     return Object.freeze({ ...window, cachedAt: value.cachedAt });
 }
 function parseWindow(value, allowCachedAt = false) {
-    if (!isRecord$2(value) || !isCounter$1(value.totalTokens) || !Array.isArray(value.byModel) || (!allowCachedAt && value.cachedAt !== undefined)) {
+    if (!isRecord$3(value) || !isCounter$1(value.totalTokens) || !Array.isArray(value.byModel) || (!allowCachedAt && value.cachedAt !== undefined)) {
         throw new NanDashboardMetricsError("schema");
     }
     const names = new Set();
     const byModel = [];
     for (const entry of value.byModel) {
-        if (!isRecord$2(entry) || !isModelName$1(entry.model) || !isCounter$1(entry.inputTokens) || !isCounter$1(entry.outputTokens)) {
+        if (!isRecord$3(entry) || !isModelName$1(entry.model) || !isCounter$1(entry.inputTokens) || !isCounter$1(entry.outputTokens)) {
             throw new NanDashboardMetricsError("schema");
         }
         if (names.has(entry.model) || entry.inputTokens > Number.MAX_SAFE_INTEGER - entry.outputTokens) {
@@ -11990,7 +11990,7 @@ function parseWindow(value, allowCachedAt = false) {
     }
     return Object.freeze({ totalTokens: value.totalTokens, byModel: Object.freeze(byModel) });
 }
-function isRecord$2(value) {
+function isRecord$3(value) {
     return typeof value === "object" && value !== null;
 }
 function isModelName$1(value) {
@@ -12044,14 +12044,14 @@ class NanDashboardQuotaClient {
     }
 }
 function parseNanDashboardQuota(value) {
-    if (!isRecord$1(value) || !isDateOnly(value.periodStart) || !Array.isArray(value.models)) {
+    if (!isRecord$2(value) || !isDateOnly(value.periodStart) || !Array.isArray(value.models)) {
         throw new NanDashboardQuotaError("schema");
     }
     const names = new Set();
     const models = [];
     const uncappedModels = [];
     for (const entry of value.models) {
-        if (!isRecord$1(entry) || !isModelName(entry.model) || !isCounter(entry.cap) || !isCounter(entry.tokensUsed)) {
+        if (!isRecord$2(entry) || !isModelName(entry.model) || !isCounter(entry.cap) || !isCounter(entry.tokensUsed)) {
             throw new NanDashboardQuotaError("schema");
         }
         if (names.has(entry.model))
@@ -12074,7 +12074,7 @@ function parseNanDashboardQuota(value) {
     }
     return { eligibility: "unknown", models, uncappedModels };
 }
-function isRecord$1(value) {
+function isRecord$2(value) {
     return typeof value === "object" && value !== null;
 }
 function isModelName(value) {
@@ -12113,6 +12113,107 @@ function calendarDate(value) {
     return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? date : null;
 }
 
+const NAN_DPAPI_TIMEOUT_MS = 10_000;
+const NAN_DPAPI_MAX_STDIN_BYTES = 8 * 1024;
+const NAN_DPAPI_MAX_STDOUT_BYTES = 8 * 1024;
+const NAN_DPAPI_ENVIRONMENT_NAMES = [
+    "SystemRoot",
+    "windir",
+    "SystemDrive",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "LOCALAPPDATA",
+    "APPDATA",
+    "COMSPEC",
+    "PATHEXT",
+];
+function resolveNanDpapiHelperPath(moduleUrl) {
+    return fileURLToPath(new URL("./nan-dpapi.ps1", moduleUrl));
+}
+function resolvePowerShellPath(environment = process.env) {
+    return join(environment.SystemRoot ?? "C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+}
+function dpapiEnvironment(source = process.env) {
+    const environment = {};
+    for (const name of NAN_DPAPI_ENVIRONMENT_NAMES) {
+        const value = source[name];
+        if (value !== undefined)
+            environment[name] = value;
+    }
+    return environment;
+}
+class NanDpapiClient {
+    run;
+    helperPath;
+    powerShellPath;
+    environment;
+    constructor(run = runNanKeychain, helperPath = resolveNanDpapiHelperPath(import.meta.url), powerShellPath = resolvePowerShellPath(), environment = dpapiEnvironment()) {
+        this.run = run;
+        this.helperPath = helperPath;
+        this.powerShellPath = powerShellPath;
+        this.environment = environment;
+    }
+    async putSessionCache(secret) {
+        await this.request({ operation: "put", secret }, false);
+    }
+    async getSessionCache() {
+        return this.request({ operation: "get" }, true);
+    }
+    async deleteSessionCache() {
+        await this.request({ operation: "delete" }, false);
+    }
+    async request(payload, expectsSecret) {
+        const stdin = `${JSON.stringify(payload)}\n`;
+        if (Buffer.byteLength(stdin, "utf8") > NAN_DPAPI_MAX_STDIN_BYTES)
+            throw unavailable$1();
+        let result;
+        try {
+            result = await this.run({
+                executable: this.powerShellPath,
+                args: ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", this.helperPath],
+                stdin,
+                timeoutMs: NAN_DPAPI_TIMEOUT_MS,
+                maxStdoutBytes: NAN_DPAPI_MAX_STDOUT_BYTES,
+                env: this.environment,
+            });
+        }
+        catch {
+            throw unavailable$1();
+        }
+        if (result.exitCode !== 0 || Buffer.byteLength(result.stdout, "utf8") > NAN_DPAPI_MAX_STDOUT_BYTES)
+            throw unavailable$1();
+        let response;
+        try {
+            response = JSON.parse(result.stdout);
+        }
+        catch {
+            throw unavailable$1();
+        }
+        if (!isRecord$1(response) || response.ok !== true)
+            throw unavailable$1();
+        if (!expectsSecret)
+            return;
+        if (typeof response.secret !== "string" && response.secret !== null)
+            throw unavailable$1();
+        return response.secret;
+    }
+}
+function unavailable$1() {
+    return new Error("DPAPI helper unavailable");
+}
+function isRecord$1(value) {
+    return typeof value === "object" && value !== null;
+}
+
+function createSessionSecretStore(platform = process.platform) {
+    if (platform === "darwin")
+        return new NanKeychainClient();
+    if (platform === "win32")
+        return new NanDpapiClient();
+    throw new Error("Session secret store unavailable on this platform");
+}
+
 const VERSION = 1;
 const SCOPE = "nan-dashboard-session";
 const MAX_BYTES = 4 * 1024;
@@ -12126,7 +12227,7 @@ class NanDashboardSessionStore {
     quota;
     metrics;
     now;
-    constructor(keychain = new NanKeychainClient(), quota = new NanDashboardQuotaClient(), now = () => new Date(), metrics = new NanDashboardMetricsClient()) {
+    constructor(keychain = createSessionSecretStore(), quota = new NanDashboardQuotaClient(), now = () => new Date(), metrics = new NanDashboardMetricsClient()) {
         this.keychain = keychain;
         this.quota = quota;
         this.metrics = metrics;
