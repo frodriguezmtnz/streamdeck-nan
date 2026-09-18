@@ -5,7 +5,7 @@ import { resolveNanLiveModel } from "./nan-live-model.js";
 export interface ClaudeFeedback {
   readonly [key: string]: string | number;
   readonly title: "Claude";
-  readonly status: "" | "NO DATA" | "STALE";
+  readonly status: "" | "NO DATA" | "STALE" | "MAC ONLY";
   readonly sessionValue: string;
   readonly sessionBar: number;
   readonly weeklyValue: string;
@@ -18,7 +18,7 @@ export interface CodexFeedback {
   readonly period: "WEEKLY";
   readonly value: string;
   readonly indicator: number;
-  readonly status: "" | "NO DATA" | "STALE";
+  readonly status: "" | "NO DATA" | "STALE" | "MAC ONLY";
 }
 
 export interface GrokFeedback {
@@ -28,7 +28,7 @@ export interface GrokFeedback {
   readonly period: string;
   readonly value: string;
   readonly indicator: number;
-  readonly status: "" | "NO DATA" | "STALE";
+  readonly status: "" | "NO DATA" | "STALE" | "MAC ONLY";
 }
 
 export interface NanDashboardFeedback {
@@ -107,11 +107,15 @@ export function formatCountdown(isoString: string): string | null {
   return "<1m";
 }
 
+function platformStatus(result: CoordinatedUsageResult): "MAC ONLY" | undefined {
+  return result.error?.code === "unsupported-platform" ? "MAC ONLY" : undefined;
+}
+
 export function renderClaudeFeedback(result: CoordinatedUsageResult, _showCountdown = false): ClaudeFeedback {
   if (!result.ok) {
     return {
       title: "Claude",
-      status: "NO DATA",
+      status: platformStatus(result) ?? "NO DATA",
       sessionValue: "--",
       sessionBar: 0,
       weeklyValue: "--",
@@ -143,7 +147,7 @@ export function renderCodexFeedback(result: CoordinatedUsageResult, showCountdow
       period: "WEEKLY",
       value: "--",
       indicator: 0,
-      status: "NO DATA",
+      status: platformStatus(result) ?? "NO DATA",
     };
   }
 
@@ -167,7 +171,7 @@ export function renderGrokFeedback(result: CoordinatedUsageResult, showCountdown
       period: "BILLING PERIOD",
       value: "--",
       indicator: 0,
-      status: "NO DATA",
+      status: platformStatus(result) ?? "NO DATA",
     };
   }
 

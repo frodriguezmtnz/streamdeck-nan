@@ -1,6 +1,6 @@
 import { NAN_DASHBOARD_METRICS_URL, NanDashboardMetricsClient, NanDashboardMetricsError, type NanDashboardMetricsSnapshot } from "./nan-dashboard-metrics-provider.js";
 import { NAN_DASHBOARD_QUOTA_URL, NanDashboardQuotaClient, NanDashboardQuotaError, type NanDashboardQuota } from "./nan-dashboard-quota-provider.js";
-import { NanKeychainClient } from "./nan-keychain-client.js";
+import { createSessionSecretStore, type SessionSecretStore } from "./nan-session-secret-store.js";
 
 const VERSION = 1;
 const SCOPE = "nan-dashboard-session";
@@ -20,11 +20,6 @@ export interface BrowserCookieRecord {
   readonly expiresAt: string | null;
 }
 
-interface SessionKeychain {
-  getSessionCache(): Promise<string | null>;
-  putSessionCache(secret: string): Promise<void>;
-  deleteSessionCache(): Promise<void>;
-}
 interface QuotaClient { getQuota(cookieHeader: string): Promise<NanDashboardQuota>; }
 interface MetricsClient { getMetrics(cookieHeader: string): Promise<NanDashboardMetricsSnapshot>; }
 type StoredSession = { readonly version: 1; readonly scope: "nan-dashboard-session"; readonly cookies: readonly BrowserCookieRecord[] };
@@ -43,13 +38,13 @@ export type NanDashboardSnapshotResult = NanDashboardUnavailable
 /** A shared instance serializes cache writes and auth-driven eviction. */
 export class NanDashboardSessionStore {
   private pending = Promise.resolve();
-  private readonly keychain: SessionKeychain;
+  private readonly keychain: SessionSecretStore;
   private readonly quota: QuotaClient;
   private readonly metrics: MetricsClient;
   private readonly now: () => Date;
 
   constructor(
-    keychain: SessionKeychain = new NanKeychainClient(),
+    keychain: SessionSecretStore = createSessionSecretStore(),
     quota: QuotaClient = new NanDashboardQuotaClient(),
     now: () => Date = () => new Date(),
     metrics: MetricsClient = new NanDashboardMetricsClient(),

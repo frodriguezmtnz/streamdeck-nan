@@ -12,6 +12,7 @@ export interface NanKeychainRequest {
   readonly stdin: string;
   readonly timeoutMs: number;
   readonly maxStdoutBytes: number;
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 export interface NanKeychainResult {
@@ -81,13 +82,13 @@ export class NanKeychainClient {
   }
 }
 
-function runNanKeychain(request: NanKeychainRequest): Promise<NanKeychainResult> {
+export function runNanKeychain(request: NanKeychainRequest): Promise<NanKeychainResult> {
   return new Promise((resolve, reject) => {
     let completed = false;
     let stdout = "";
     let stdoutBytes = 0;
     const child = spawn(request.executable, [...request.args], {
-      env: {},
+      env: request.env ? { ...request.env } : {},
       shell: false,
       stdio: ["pipe", "pipe", "ignore"],
       windowsHide: true,
