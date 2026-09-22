@@ -20,6 +20,7 @@ const NAN_DPAPI_ENVIRONMENT_NAMES = [
   "APPDATA",
   "COMSPEC",
   "PATHEXT",
+  "PSModuleAnalysisCachePath",
 ] as const;
 
 export function resolveNanDpapiHelperPath(moduleUrl: string): string {

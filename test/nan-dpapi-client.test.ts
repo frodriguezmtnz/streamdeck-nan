@@ -84,3 +84,10 @@ test("NaN DPAPI environment allowlist drops unrelated and secret variables", () 
     { SystemRoot: "C:\\Windows", TEMP: "C:\\Temp" },
   );
 });
+
+test("NaN DPAPI environment keeps the PowerShell module analysis cache path", () => {
+  assert.deepEqual(
+    dpapiEnvironment({ SystemRoot: "C:\\Windows", PSModuleAnalysisCachePath: "C:\\cache\\ModuleAnalysisCache" }),
+    { SystemRoot: "C:\\Windows", PSModuleAnalysisCachePath: "C:\\cache\\ModuleAnalysisCache" },
+  );
+});

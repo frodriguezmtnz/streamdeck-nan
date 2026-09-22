@@ -12179,6 +12179,7 @@ const NAN_DPAPI_ENVIRONMENT_NAMES = [
     "APPDATA",
     "COMSPEC",
     "PATHEXT",
+    "PSModuleAnalysisCachePath",
 ];
 function resolveNanDpapiHelperPath(moduleUrl) {
     return fileURLToPath(new URL("./nan-dpapi.ps1", moduleUrl));
