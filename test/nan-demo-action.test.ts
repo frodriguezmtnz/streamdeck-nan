@@ -4,6 +4,7 @@ import test from "node:test";
 import { registerHooks } from "node:module";
 import { streamDeck, type DialAction } from "@elgato/streamdeck";
 import { createImportChromeSessionResult, parseImportChromeSessionMessage } from "../src/actions/nan-chrome-import-message.js";
+import { createSaveSessionResult } from "../src/actions/nan-save-session-message.js";
 import { NanDashboardController } from "../src/actions/nan-dashboard-controller.js";
 
 const actionUrl = new URL("../src/actions/nan-demo-usage.ts", import.meta.url);
@@ -123,16 +124,56 @@ test("shared controller reports typed busy without replacing the accepted import
   assert.deepEqual(await accepted, { state: "needs-import" });
 });
 
+test("dial saves a pasted session and correlates its terminal result", async (t) => {
+  const sent: unknown[] = [];
+  const dashboard = new ImportDashboard();
+  const dial = fakeDial("dial");
+  replaceUi(t, { action: dial, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanDemoUsage } = await loadNanDemoUsage();
+  const subject = new NanDemoUsage(dashboard);
+  await subject.onWillAppear({ action: dial, payload: { settings: { autoRefresh: false } } } as never);
+
+  await subject.onSendToPlugin({ action: dial, payload: { kind: "nan.saveSession.v1", requestId: "save_1", value: "session=opaque" } } as never);
+  assert.equal(dashboard.saves, 1);
+  assert.deepEqual(sent, [createSaveSessionResult("save_1", "ready")]);
+
+  dashboard.saveResult = { state: "invalid-source" };
+  await subject.onSendToPlugin({ action: dial, payload: { kind: "nan.saveSession.v1", requestId: "save_2", value: "nope" } } as never);
+  assert.deepEqual(sent.at(-1), createSaveSessionResult("save_2", "failed"));
+});
+
+test("dial answers a capabilities probe without acquiring a session", async (t) => {
+  const sent: unknown[] = [];
+  const dashboard = new ImportDashboard();
+  const dial = fakeDial("dial");
+  replaceUi(t, { action: dial, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanDemoUsage } = await loadNanDemoUsage();
+  const subject = new NanDemoUsage(dashboard);
+  await subject.onWillAppear({ action: dial, payload: { settings: { autoRefresh: false } } } as never);
+
+  await subject.onSendToPlugin({ action: dial, payload: { kind: "nan.capabilities.v1", requestId: "caps_1" } } as never);
+  assert.deepEqual(sent, [{ kind: "nan.capabilities.result.v1", requestId: "caps_1", platform: process.platform, chromeImport: process.platform === "darwin", pasteSession: process.platform !== "darwin" }]);
+  assert.equal(dashboard.imports, 0);
+  assert.equal(dashboard.saves, 0);
+});
+
 class ImportDashboard {
   imports = 0;
+  saves = 0;
   throws = false;
   result: { state: "ready" } | { state: "import-busy" | "import-unavailable" } = { state: "ready" };
+  saveResult: { state: "ready" } | { state: "invalid-source" | "import-busy" | "import-unavailable" } = { state: "ready" };
   async getUsage(): Promise<{ source: "dashboard"; stale: false }> { return { source: "dashboard", stale: false }; }
   getCachedUsage(): { source: "dashboard"; stale: false } { return { source: "dashboard", stale: false }; }
   async importChromeSession(): Promise<typeof this.result> {
     this.imports += 1;
     if (this.throws) throw new Error("sentinel-secret");
     return this.result;
+  }
+  async saveSession(): Promise<typeof this.saveResult> {
+    this.saves += 1;
+    if (this.throws) throw new Error("sentinel-secret");
+    return this.saveResult;
   }
 }
 

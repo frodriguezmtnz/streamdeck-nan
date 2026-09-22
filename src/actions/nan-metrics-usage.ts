@@ -12,6 +12,8 @@ import {
 import { NanDashboardController, type NanDashboardUsage } from "./nan-dashboard-controller.js";
 import { renderNanMetricsUsageImage, type NanMetricsPeriod } from "./nan-metrics-feedback.js";
 import { createImportChromeSessionResult, parseImportChromeSessionMessage, type ImportChromeSessionRequest } from "./nan-chrome-import-message.js";
+import { respondToNanCapabilities } from "./nan-capabilities-responder.js";
+import { createSaveSessionResult, parseSaveSessionMessage, type SaveSessionRequest } from "./nan-save-session-message.js";
 
 type NanMetricsSettings = Record<string, never>;
 type VisibleMetricsAction = { readonly action: KeyAction<NanMetricsSettings>; disposeWatch: () => void };
@@ -50,14 +52,19 @@ abstract class NanMetricsUsage extends SingletonAction<NanMetricsSettings> {
 
   override async onSendToPlugin(ev: SendToPluginEvent<any, NanMetricsSettings>): Promise<void> {
     if (!ev.action.isKey() || !this.isCurrent(ev.action)) return;
-    const request = parseImportChromeSessionMessage(ev.payload);
-    if (!request) return;
+    if (await respondToNanCapabilities(ev.action.id, ev.payload)) return;
+    const importRequest = parseImportChromeSessionMessage(ev.payload);
+    const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+    if (!importRequest && !saveRequest) return;
     let outcome: "ready" | "failed" | "busy" = "failed";
     try {
-      const result = await this.dashboard.importChromeSession();
+      const result = importRequest
+        ? await this.dashboard.importChromeSession()
+        : await this.dashboard.saveSession(saveRequest!.value);
       outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
     } catch {}
-    await this.sendImportResult(ev.action, request, outcome);
+    if (importRequest) await this.sendImportResult(ev.action, importRequest, outcome);
+    else if (saveRequest) await this.sendSaveResult(ev.action, saveRequest, outcome);
   }
 
   override onWillDisappear(ev: WillDisappearEvent<NanMetricsSettings>): void {
@@ -79,6 +86,17 @@ abstract class NanMetricsUsage extends SingletonAction<NanMetricsSettings> {
     if (!("requestId" in request) || !this.isCurrent(action) || streamDeck.ui.action?.id !== action.id) return;
     try {
       await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+    } catch {}
+  }
+
+  private async sendSaveResult(
+    action: KeyAction<NanMetricsSettings>,
+    request: SaveSessionRequest,
+    outcome: "ready" | "failed" | "busy",
+  ): Promise<void> {
+    if (!this.isCurrent(action) || streamDeck.ui.action?.id !== action.id) return;
+    try {
+      await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
     } catch {}
   }
 

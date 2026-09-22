@@ -4,6 +4,7 @@ import { registerHooks } from "node:module";
 import { streamDeck, type KeyAction } from "@elgato/streamdeck";
 import type { NanDashboardUsage } from "../src/actions/nan-dashboard-controller.ts";
 import { createImportChromeSessionResult } from "../src/actions/nan-chrome-import-message.js";
+import { createSaveSessionResult } from "../src/actions/nan-save-session-message.js";
 
 const actionUrl = new URL("../src/actions/nan-model-usage.ts", import.meta.url);
 registerHooks({
@@ -175,10 +176,42 @@ class FakeDashboard {
   }
 }
 
+test("model key saves a pasted session and correlates the outcome with its current inspector", async (t) => {
+  const dashboard = new ImportDashboard();
+  const sent: unknown[] = [];
+  const key = fakeKey("current");
+  replaceUi(t, { action: key, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanModelUsage } = await loadNanModelUsage();
+  const subject = new NanModelUsage(dashboard);
+  await subject.onWillAppear({ action: key, payload: { settings: {} } } as never);
+
+  dashboard.saveResult = { state: "invalid-source" };
+  await subject.onSendToPlugin({ action: key, payload: { kind: "nan.saveSession.v1", requestId: "save_1", value: "nope" } } as never);
+  assert.equal(dashboard.saves, 1);
+  assert.deepEqual(sent, [createSaveSessionResult("save_1", "failed")]);
+});
+
+test("model key answers a capabilities probe without importing a session", async (t) => {
+  const dashboard = new ImportDashboard();
+  const sent: unknown[] = [];
+  const key = fakeKey("current");
+  replaceUi(t, { action: key, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanModelUsage } = await loadNanModelUsage();
+  const subject = new NanModelUsage(dashboard);
+  await subject.onWillAppear({ action: key, payload: { settings: {} } } as never);
+
+  await subject.onSendToPlugin({ action: key, payload: { kind: "nan.capabilities.v1", requestId: "caps_1" } } as never);
+  assert.equal((sent[0] as { kind: string }).kind, "nan.capabilities.result.v1");
+  assert.equal(dashboard.imports, 0);
+  assert.equal(dashboard.saves, 0);
+});
+
 class ImportDashboard {
   imports = 0;
+  saves = 0;
   result: NanDashboardUsage = quotaUsage;
   importResult: { state: "ready"; quota?: NanDashboardUsage["quota"] } | { state: "import-busy" | "import-unavailable" } = { state: "ready", quota: quotaUsage.quota };
+  saveResult: { state: "ready"; quota?: NanDashboardUsage["quota"] } | { state: "invalid-source" | "import-busy" | "import-unavailable" } = { state: "ready", quota: quotaUsage.quota };
   private readonly listeners = new Set<(usage: NanDashboardUsage) => void>();
 
   subscribe(listener: (usage: NanDashboardUsage) => void): () => void {
@@ -191,6 +224,11 @@ class ImportDashboard {
     this.imports += 1;
     for (const listener of this.listeners) listener(this.result);
     return this.importResult;
+  }
+  async saveSession(): Promise<typeof this.saveResult> {
+    this.saves += 1;
+    for (const listener of this.listeners) listener(this.result);
+    return this.saveResult;
   }
 }
 

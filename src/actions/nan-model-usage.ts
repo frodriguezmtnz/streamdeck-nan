@@ -12,6 +12,8 @@ import {
 import { NanDashboardController, type NanDashboardUsage } from "./nan-dashboard-controller.js";
 import { renderNanModelUsageImage, type NanModelSettings } from "./nan-model-feedback.js";
 import { createImportChromeSessionResult, parseImportChromeSessionMessage, type ImportChromeSessionRequest } from "./nan-chrome-import-message.js";
+import { respondToNanCapabilities } from "./nan-capabilities-responder.js";
+import { createSaveSessionResult, parseSaveSessionMessage, type SaveSessionRequest } from "./nan-save-session-message.js";
 
 export type NanModelUsageSettings = NanModelSettings;
 const GET_MODELS = "nan.modelUsage.getModels.v1";
@@ -55,14 +57,19 @@ export class NanModelUsage extends SingletonAction<NanModelUsageSettings> {
 
   override async onSendToPlugin(ev: SendToPluginEvent<any, NanModelUsageSettings>): Promise<void> {
     if (!ev.action.isKey() || !this.isCurrent(ev.action)) return;
+    if (await respondToNanCapabilities(ev.action.id, ev.payload)) return;
     const importRequest = parseImportChromeSessionMessage(ev.payload);
-    if (importRequest) {
+    const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+    if (importRequest || saveRequest) {
       let outcome: "ready" | "failed" | "busy" = "failed";
       try {
-        const result = await this.dashboard.importChromeSession();
+        const result = importRequest
+          ? await this.dashboard.importChromeSession()
+          : await this.dashboard.saveSession(saveRequest!.value);
         outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
       } catch {}
-      await this.sendImportResult(ev.action, importRequest, outcome);
+      if (importRequest) await this.sendImportResult(ev.action, importRequest, outcome);
+      else if (saveRequest) await this.sendSaveResult(ev.action, saveRequest, outcome);
       return;
     }
     if (isModelsRequest(ev.payload)) {
@@ -104,6 +111,17 @@ export class NanModelUsage extends SingletonAction<NanModelUsageSettings> {
     if (!("requestId" in request) || !this.isCurrent(action) || streamDeck.ui.action?.id !== action.id) return;
     try {
       await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+    } catch {}
+  }
+
+  private async sendSaveResult(
+    action: KeyAction<NanModelUsageSettings>,
+    request: SaveSessionRequest,
+    outcome: "ready" | "failed" | "busy",
+  ): Promise<void> {
+    if (!this.isCurrent(action) || streamDeck.ui.action?.id !== action.id) return;
+    try {
+      await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
     } catch {}
   }
 

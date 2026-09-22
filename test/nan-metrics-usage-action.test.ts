@@ -4,6 +4,7 @@ import { registerHooks } from "node:module";
 import { streamDeck, type KeyAction } from "@elgato/streamdeck";
 import type { NanDashboardUsage } from "../src/actions/nan-dashboard-controller.ts";
 import { createImportChromeSessionResult } from "../src/actions/nan-chrome-import-message.js";
+import { createSaveSessionResult } from "../src/actions/nan-save-session-message.js";
 
 const actionUrl = new URL("../src/actions/nan-metrics-usage.ts", import.meta.url);
 registerHooks({
@@ -123,13 +124,45 @@ test("total and monthly keypad actions share watch-driven snapshots and dispose 
   assert.equal(dashboard.disposals, 2);
 });
 
+test("total keys save a pasted session and correlate the outcome with their current inspector", async (t) => {
+  const dashboard = new FakeDashboard();
+  const sent: unknown[] = [];
+  const totalKey = fakeKey("total", []);
+  replaceUi(t, { action: totalKey, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanTotalTokensUsage } = await loadActions();
+  const total = new NanTotalTokensUsage(dashboard);
+  await total.onWillAppear({ action: totalKey, payload: { settings: {} } } as never);
+
+  dashboard.saveResult = { state: "invalid-source" };
+  await total.onSendToPlugin({ action: totalKey, payload: { kind: "nan.saveSession.v1", requestId: "save_1", value: "nope" } } as never);
+  assert.equal(dashboard.saves, 1);
+  assert.deepEqual(sent, [createSaveSessionResult("save_1", "failed")]);
+});
+
+test("total keys answer a capabilities probe without importing a session", async (t) => {
+  const dashboard = new FakeDashboard();
+  const sent: unknown[] = [];
+  const totalKey = fakeKey("total", []);
+  replaceUi(t, { action: totalKey, sendToPropertyInspector: async (payload: unknown) => { sent.push(payload); } });
+  const { NanTotalTokensUsage } = await loadActions();
+  const total = new NanTotalTokensUsage(dashboard);
+  await total.onWillAppear({ action: totalKey, payload: { settings: {} } } as never);
+
+  await total.onSendToPlugin({ action: totalKey, payload: { kind: "nan.capabilities.v1", requestId: "caps_1" } } as never);
+  assert.equal((sent[0] as { kind: string }).kind, "nan.capabilities.result.v1");
+  assert.equal(dashboard.imports, 0);
+  assert.equal(dashboard.saves, 0);
+});
+
 class FakeDashboard {
   watches = 0;
   disposals = 0;
   reads = 0;
   imports = 0;
+  saves = 0;
   getCachedCalls = 0;
   importResult: { state: "ready" } | { state: "import-busy" | "import-unavailable" } = { state: "ready" };
+  saveResult: { state: "ready" } | { state: "invalid-source" | "import-busy" | "import-unavailable" } = { state: "ready" };
   private readonly listeners = new Set<(usage: NanDashboardUsage) => void>();
 
   subscribe(listener: (usage: NanDashboardUsage) => void): () => void {
@@ -147,6 +180,11 @@ class FakeDashboard {
     this.imports += 1;
     await this.publish(cached);
     return this.importResult;
+  }
+  async saveSession(): Promise<typeof this.saveResult> {
+    this.saves += 1;
+    await this.publish(cached);
+    return this.saveResult;
   }
   async publish(usage: NanDashboardUsage): Promise<void> {
     for (const listener of this.listeners) listener(usage);

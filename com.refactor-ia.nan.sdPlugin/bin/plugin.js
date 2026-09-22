@@ -12658,7 +12658,7 @@ const defaultWatchScheduler = {
 
 const IMPORT_CHROME_SESSION_KIND = "nan.importChromeSession.v1";
 const IMPORT_CHROME_SESSION_RESULT_KIND = "nan.importChromeSession.result.v1";
-const REQUEST_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const REQUEST_ID$2 = /^[A-Za-z0-9_-]{1,64}$/;
 /** Parses an explicit legacy request or an exact correlated request before Chrome acquisition. */
 function parseImportChromeSessionMessage(payload) {
     if (typeof payload !== "object" || payload === null || payload.kind !== IMPORT_CHROME_SESSION_KIND)
@@ -12667,7 +12667,7 @@ function parseImportChromeSessionMessage(payload) {
     if (keys.length === 1)
         return { kind: IMPORT_CHROME_SESSION_KIND };
     const requestId = payload.requestId;
-    if (keys.length === 2 && typeof requestId === "string" && REQUEST_ID.test(requestId)) {
+    if (keys.length === 2 && typeof requestId === "string" && REQUEST_ID$2.test(requestId)) {
         return { kind: IMPORT_CHROME_SESSION_KIND, requestId };
     }
     return undefined;
@@ -12675,6 +12675,61 @@ function parseImportChromeSessionMessage(payload) {
 /** Produces the only data shape sent back to the originating property inspector. */
 function createImportChromeSessionResult(requestId, outcome) {
     return { kind: IMPORT_CHROME_SESSION_RESULT_KIND, requestId, outcome };
+}
+
+const NAN_CAPABILITIES_KIND = "nan.capabilities.v1";
+const NAN_CAPABILITIES_RESULT_KIND = "nan.capabilities.result.v1";
+const REQUEST_ID$1 = /^[A-Za-z0-9_-]{1,64}$/;
+function nanCapabilities(platform = process.platform) {
+    const chromeImport = platform === "darwin";
+    return { platform, chromeImport, pasteSession: !chromeImport };
+}
+function parseNanCapabilitiesMessage(payload) {
+    if (typeof payload !== "object" || payload === null || Object.keys(payload).length !== 2)
+        return undefined;
+    const { kind, requestId } = payload;
+    if (kind !== NAN_CAPABILITIES_KIND || typeof requestId !== "string" || !REQUEST_ID$1.test(requestId))
+        return undefined;
+    return { requestId };
+}
+function createNanCapabilitiesResult(requestId, capabilities) {
+    return { kind: NAN_CAPABILITIES_RESULT_KIND, requestId, ...capabilities };
+}
+
+/** Answers an exact capabilities probe for the current inspector; returns whether the payload was claimed. */
+async function respondToNanCapabilities(actionId, payload) {
+    const request = parseNanCapabilitiesMessage(payload);
+    if (!request)
+        return false;
+    if (streamDeck.ui.action?.id !== actionId)
+        return true;
+    try {
+        await streamDeck.ui.sendToPropertyInspector(createNanCapabilitiesResult(request.requestId, nanCapabilities()));
+    }
+    catch { }
+    return true;
+}
+
+const SAVE_SESSION_KIND = "nan.saveSession.v1";
+const SAVE_SESSION_RESULT_KIND = "nan.saveSession.result.v1";
+const SAVE_SESSION_MAX_BYTES = 8 * 1024;
+const REQUEST_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const DISALLOWED_CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/;
+/** Accepts only an exact, bounded, correlated paste request before any session parsing. */
+function parseSaveSessionMessage(payload) {
+    if (typeof payload !== "object" || payload === null || Object.keys(payload).length !== 3)
+        return undefined;
+    const { kind, requestId, value } = payload;
+    if (kind !== SAVE_SESSION_KIND || typeof requestId !== "string" || !REQUEST_ID.test(requestId))
+        return undefined;
+    if (typeof value !== "string" || value.length === 0 || Buffer.byteLength(value, "utf8") > SAVE_SESSION_MAX_BYTES)
+        return undefined;
+    if (DISALLOWED_CONTROL.test(value))
+        return undefined;
+    return { kind: SAVE_SESSION_KIND, requestId, value };
+}
+function createSaveSessionResult(requestId, outcome) {
+    return { kind: SAVE_SESSION_RESULT_KIND, requestId, outcome };
 }
 
 let NanDemoUsage = (() => {
@@ -12751,8 +12806,11 @@ let NanDemoUsage = (() => {
         async onSendToPlugin(ev) {
             if (!ev.action.isDial() || !this.hasActiveLifecycle(ev.action))
                 return;
-            const request = parseImportChromeSessionMessage(ev.payload);
-            if (!request)
+            if (await respondToNanCapabilities(ev.action.id, ev.payload))
+                return;
+            const importRequest = parseImportChromeSessionMessage(ev.payload);
+            const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+            if (!importRequest && !saveRequest)
                 return;
             const action = ev.action;
             const isCurrent = this.lifecycleGuard(action);
@@ -12763,7 +12821,9 @@ let NanDemoUsage = (() => {
             let result;
             let outcome = "failed";
             try {
-                result = await this.dashboard.importChromeSession();
+                result = importRequest
+                    ? await this.dashboard.importChromeSession()
+                    : await this.dashboard.saveSession(saveRequest.value);
                 outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
             }
             catch {
@@ -12777,13 +12837,24 @@ let NanDemoUsage = (() => {
                     ? { source: "dashboard", quota: result.quota, stale: false }
                     : { source: "dashboard", stale: false, error: result.state }, settings);
             }
-            await this.sendImportResult(action, request, outcome, isCurrent, isSameAppearance);
+            if (importRequest)
+                await this.sendImportResult(action, importRequest, outcome, isCurrent, isSameAppearance);
+            else if (saveRequest)
+                await this.sendSaveResult(action, saveRequest, outcome, isCurrent, isSameAppearance);
         }
         async sendImportResult(action, request, outcome, isCurrent, isSameAppearance) {
             if (!("requestId" in request) || !isCurrent() || !isSameAppearance() || streamDeck.ui.action?.id !== action.id)
                 return;
             try {
                 await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+            }
+            catch { }
+        }
+        async sendSaveResult(action, request, outcome, isCurrent, isSameAppearance) {
+            if (!isCurrent() || !isSameAppearance() || streamDeck.ui.action?.id !== action.id)
+                return;
+            try {
+                await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
             }
             catch { }
         }
@@ -13062,15 +13133,23 @@ let NanModelUsage = (() => {
         async onSendToPlugin(ev) {
             if (!ev.action.isKey() || !this.isCurrent(ev.action))
                 return;
+            if (await respondToNanCapabilities(ev.action.id, ev.payload))
+                return;
             const importRequest = parseImportChromeSessionMessage(ev.payload);
-            if (importRequest) {
+            const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+            if (importRequest || saveRequest) {
                 let outcome = "failed";
                 try {
-                    const result = await this.dashboard.importChromeSession();
+                    const result = importRequest
+                        ? await this.dashboard.importChromeSession()
+                        : await this.dashboard.saveSession(saveRequest.value);
                     outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
                 }
                 catch { }
-                await this.sendImportResult(ev.action, importRequest, outcome);
+                if (importRequest)
+                    await this.sendImportResult(ev.action, importRequest, outcome);
+                else if (saveRequest)
+                    await this.sendSaveResult(ev.action, saveRequest, outcome);
                 return;
             }
             if (isModelsRequest(ev.payload)) {
@@ -13109,6 +13188,14 @@ let NanModelUsage = (() => {
                 return;
             try {
                 await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+            }
+            catch { }
+        }
+        async sendSaveResult(action, request, outcome) {
+            if (!this.isCurrent(action) || streamDeck.ui.action?.id !== action.id)
+                return;
+            try {
+                await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
             }
             catch { }
         }
@@ -13198,16 +13285,24 @@ class NanMetricsUsage extends SingletonAction {
     async onSendToPlugin(ev) {
         if (!ev.action.isKey() || !this.isCurrent(ev.action))
             return;
-        const request = parseImportChromeSessionMessage(ev.payload);
-        if (!request)
+        if (await respondToNanCapabilities(ev.action.id, ev.payload))
+            return;
+        const importRequest = parseImportChromeSessionMessage(ev.payload);
+        const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+        if (!importRequest && !saveRequest)
             return;
         let outcome = "failed";
         try {
-            const result = await this.dashboard.importChromeSession();
+            const result = importRequest
+                ? await this.dashboard.importChromeSession()
+                : await this.dashboard.saveSession(saveRequest.value);
             outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
         }
         catch { }
-        await this.sendImportResult(ev.action, request, outcome);
+        if (importRequest)
+            await this.sendImportResult(ev.action, importRequest, outcome);
+        else if (saveRequest)
+            await this.sendSaveResult(ev.action, saveRequest, outcome);
     }
     onWillDisappear(ev) {
         const entry = this.visible.get(ev.action.id);
@@ -13224,6 +13319,14 @@ class NanMetricsUsage extends SingletonAction {
             return;
         try {
             await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+        }
+        catch { }
+    }
+    async sendSaveResult(action, request, outcome) {
+        if (!this.isCurrent(action) || streamDeck.ui.action?.id !== action.id)
+            return;
+        try {
+            await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
         }
         catch { }
     }
