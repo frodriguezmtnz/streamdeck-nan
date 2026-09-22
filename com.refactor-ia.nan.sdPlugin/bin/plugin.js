@@ -11802,6 +11802,58 @@ function isNotFound(error) {
     return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
+const NAN_SESSION_PASTE_MAX_BYTES = 8 * 1024;
+const NAN_SESSION_PASTE_TARGET_DOMAIN = "cloud-api.nan.builders";
+const MAX_COOKIES$1 = 32;
+const COOKIE_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+const COOKIE_VALUE = /^[!#$%&'()*+\-./0-9:<=>?@A-Z\[\]^_`a-z{|}~]*$/;
+const COOKIE_PREFIX = /^\s*cookie\s*:\s*/i;
+const COOKIE_FLAG = /(?:^|\s)(?:-b|--cookie)\s+(?:"([^"]*)"|'([^']*)'|(\S+))/i;
+const HEADER_FLAG = /(?:^|\s)(?:-H|--header)\s+(?:"([^"]*)"|'([^']*)'|(\S+))/gi;
+/** Parses a pasted Cookie header or a browser "Copy as cURL" command into scoped session records. */
+function parsePastedSession(raw) {
+    if (typeof raw !== "string")
+        return null;
+    if (Buffer.byteLength(raw, "utf8") > NAN_SESSION_PASTE_MAX_BYTES)
+        return null;
+    const header = extractHeader(raw);
+    if (!header)
+        return null;
+    const records = new Map();
+    for (const segment of header.split(";")) {
+        const pair = segment.trim();
+        if (!pair)
+            continue;
+        const separator = pair.indexOf("=");
+        if (separator <= 0)
+            return null;
+        const name = pair.slice(0, separator).trim();
+        const value = pair.slice(separator + 1).trim();
+        if (!COOKIE_NAME.test(name) || !COOKIE_VALUE.test(value))
+            return null;
+        records.set(name, { name, value, domain: NAN_SESSION_PASTE_TARGET_DOMAIN, hostOnly: true, path: "/", secure: true, expiresAt: null });
+    }
+    if (records.size === 0 || records.size > MAX_COOKIES$1)
+        return null;
+    return [...records.values()];
+}
+function extractHeader(raw) {
+    const text = raw.trim();
+    if (!text)
+        return null;
+    const cookieFlag = COOKIE_FLAG.exec(text);
+    if (cookieFlag)
+        return cookieFlag[1] ?? cookieFlag[2] ?? cookieFlag[3] ?? null;
+    for (const match of text.matchAll(HEADER_FLAG)) {
+        const value = (match[1] ?? match[2] ?? match[3] ?? "").trim();
+        if (COOKIE_PREFIX.test(value))
+            return value.replace(COOKIE_PREFIX, "");
+    }
+    if (/^curl\s/i.test(text))
+        return null;
+    return text.replace(COOKIE_PREFIX, "");
+}
+
 const NAN_DASHBOARD_QUOTA_URL$1 = "https://cloud-api.nan.builders/api/usage/quota";
 const NAN_DASHBOARD_METRICS_URL$1 = "https://cloud-api.nan.builders/api/metrics/usage";
 const RESOURCE_URLS = {
@@ -12470,15 +12522,25 @@ class NanDashboardController {
         return this.cachedDashboardUsage();
     }
     importChromeSession() {
+        return this.beginSessionRequest(() => this.importCandidates());
+    }
+    /** Stores an explicit pasted session without touching Chrome's encrypted store. */
+    saveSession(raw) {
+        const cookies = parsePastedSession(raw);
+        if (!cookies)
+            return Promise.resolve({ state: "invalid-source" });
+        return this.beginSessionRequest(() => this.storeCookies(cookies));
+    }
+    beginSessionRequest(store) {
         if (this.importInFlight)
             return Promise.resolve({ state: "import-busy" });
-        // A replacement account invalidates both endpoint snapshots before the importer runs.
+        // A replacement account invalidates both endpoint snapshots before the session is stored.
         this.dashboardEpoch += 1;
         this.lastDashboardQuota = undefined;
         this.lastDashboardMetrics = undefined;
         this.lastMetricsError = undefined;
         this.dashboardCacheInvalidated = true;
-        const request = this.importCandidates().then((result) => {
+        const request = store().then((result) => {
             this.notify(result.state === "ready"
                 ? { source: "dashboard", quota: result.quota, stale: false, metricsStale: false }
                 : { source: "dashboard", stale: false, error: result.state });
@@ -12563,24 +12625,30 @@ class NanDashboardController {
             return { state: error instanceof NanChromeImportError ? "import-unavailable" : "import-unavailable" };
         }
         for (const candidate of candidates) {
-            let result;
-            try {
-                result = await this.sessions.validateAndStore(candidate.cookies);
-            }
-            catch {
-                return { state: "transient" };
-            }
-            if (result.state === "ready") {
-                this.lastDashboardQuota = result.quota;
-                this.dashboardCacheInvalidated = false;
+            const result = await this.storeCookies(candidate.cookies);
+            if (result.state === "ready")
                 return result;
-            }
             // A rejected/invalid isolated candidate can try the next profile/store. The
             // remaining typed errors are not candidate-specific and must not be retried.
             if (result.state !== "needs-import")
                 return result;
         }
         return { state: "needs-import" };
+    }
+    async storeCookies(cookies) {
+        let result;
+        try {
+            result = await this.sessions.validateAndStore(cookies);
+        }
+        catch {
+            return { state: "transient" };
+        }
+        if (result.state === "ready") {
+            this.lastDashboardQuota = result.quota;
+            this.dashboardCacheInvalidated = false;
+            return result;
+        }
+        return result;
     }
 }
 const defaultWatchScheduler = {

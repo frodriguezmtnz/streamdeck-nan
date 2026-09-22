@@ -1,4 +1,5 @@
 import { NanChromeImportError, NanChromeCookieImporter, type NanChromeCookieCandidate } from "../providers/nan/nan-chrome-cookie-importer.js";
+import { parsePastedSession } from "../providers/nan/nan-session-paste-parser.js";
 import { NanDashboardSessionStore, type BrowserCookieRecord, type NanDashboardSessionResult, type NanDashboardSnapshotResult } from "../providers/nan/nan-dashboard-session-store.js";
 import type { NanDashboardMetricsSnapshot } from "../providers/nan/nan-dashboard-metrics-provider.js";
 import type { NanDashboardQuota } from "../providers/nan/nan-dashboard-quota-provider.js";
@@ -107,14 +108,25 @@ export class NanDashboardController {
   }
 
   importChromeSession(): Promise<NanChromeImportResult> {
+    return this.beginSessionRequest(() => this.importCandidates());
+  }
+
+  /** Stores an explicit pasted session without touching Chrome's encrypted store. */
+  saveSession(raw: string): Promise<NanChromeImportResult> {
+    const cookies = parsePastedSession(raw);
+    if (!cookies) return Promise.resolve({ state: "invalid-source" });
+    return this.beginSessionRequest(() => this.storeCookies(cookies));
+  }
+
+  private beginSessionRequest(store: () => Promise<NanChromeImportResult>): Promise<NanChromeImportResult> {
     if (this.importInFlight) return Promise.resolve({ state: "import-busy" });
-    // A replacement account invalidates both endpoint snapshots before the importer runs.
+    // A replacement account invalidates both endpoint snapshots before the session is stored.
     this.dashboardEpoch += 1;
     this.lastDashboardQuota = undefined;
     this.lastDashboardMetrics = undefined;
     this.lastMetricsError = undefined;
     this.dashboardCacheInvalidated = true;
-    const request = this.importCandidates().then((result) => {
+    const request = store().then((result) => {
       this.notify(result.state === "ready"
         ? { source: "dashboard", quota: result.quota, stale: false, metricsStale: false }
         : { source: "dashboard", stale: false, error: result.state });
@@ -189,18 +201,24 @@ export class NanDashboardController {
       return { state: error instanceof NanChromeImportError ? "import-unavailable" : "import-unavailable" };
     }
     for (const candidate of candidates) {
-      let result: NanDashboardSessionResult;
-      try { result = await this.sessions.validateAndStore(candidate.cookies); } catch { return { state: "transient" }; }
-      if (result.state === "ready") {
-        this.lastDashboardQuota = result.quota;
-        this.dashboardCacheInvalidated = false;
-        return result;
-      }
+      const result = await this.storeCookies(candidate.cookies);
+      if (result.state === "ready") return result;
       // A rejected/invalid isolated candidate can try the next profile/store. The
       // remaining typed errors are not candidate-specific and must not be retried.
       if (result.state !== "needs-import") return result;
     }
     return { state: "needs-import" };
+  }
+
+  private async storeCookies(cookies: readonly BrowserCookieRecord[]): Promise<NanChromeImportResult> {
+    let result: NanDashboardSessionResult;
+    try { result = await this.sessions.validateAndStore(cookies); } catch { return { state: "transient" }; }
+    if (result.state === "ready") {
+      this.lastDashboardQuota = result.quota;
+      this.dashboardCacheInvalidated = false;
+      return result;
+    }
+    return result;
   }
 }
 

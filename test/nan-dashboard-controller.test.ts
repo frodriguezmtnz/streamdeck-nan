@@ -69,6 +69,42 @@ test("explicit import validates isolated candidates sequentially and is the only
   assert.equal(importer.calls, 1);
 });
 
+test("explicit pasted session stores scoped records without touching Chrome", async () => {
+  const { controller, sessions, importer } = createController();
+  sessions.writeResults = [{ state: "ready", quota }];
+  const result = await controller.saveSession("Cookie: session=opaque; api=two");
+  assert.equal(result.state, "ready");
+  assert.equal(importer.calls, 0);
+  assert.deepEqual(sessions.writes, [[
+    { name: "session", value: "opaque", domain: "cloud-api.nan.builders", hostOnly: true, path: "/", secure: true, expiresAt: null },
+    { name: "api", value: "two", domain: "cloud-api.nan.builders", hostOnly: true, path: "/", secure: true, expiresAt: null },
+  ]]);
+});
+
+test("invalid pasted sessions are inert and keep the working snapshot", async () => {
+  const { controller, sessions } = createController();
+  sessions.result = { state: "ready", quota };
+  assert.equal((await controller.getUsage({})).quota, quota);
+  assert.deepEqual(await controller.saveSession("not a session"), { state: "invalid-source" });
+  assert.equal(sessions.writes.length, 0);
+  assert.equal(controller.getCachedUsage({}).quota, quota);
+});
+
+test("pasted session while an import is in flight reports busy without storing", async () => {
+  const { controller, sessions, importer } = createController();
+  let release!: () => void;
+  importer.importCandidates = async () => {
+    importer.calls += 1;
+    await new Promise<void>((resolve) => { release = resolve; });
+    return [];
+  };
+  const started = controller.importChromeSession();
+  assert.deepEqual(await controller.saveSession("session=opaque"), { state: "import-busy" });
+  assert.equal(sessions.writes.length, 0);
+  release();
+  await started;
+});
+
 test("dashboard transient keeps only its own last quota and an account reset clears endpoint snapshots", async () => {
   const { controller, sessions } = createController();
   sessions.result = { state: "ready", quota };
