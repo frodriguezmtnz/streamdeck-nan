@@ -21,6 +21,12 @@ test("manifest declares macOS and Windows support within the two-entry limit", (
   for (const entry of manifest.OS) assert.match(entry.MinimumVersion, /^\d+(\.\d+)*$/);
 });
 
+test("repository checkout pins LF endings for line-ending-sensitive contracts", () => {
+  const attributes = readFileSync(".gitattributes", "utf8");
+
+  assert.match(attributes, /^\* text=auto eol=lf$/m);
+});
+
 test("unsupported-platform provider fails closed without touching discovery", async () => {
   const provider = new UnsupportedPlatformUsageProvider("claude");
 

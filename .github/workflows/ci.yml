@@ -95,6 +95,14 @@ jobs:
         run: test -f com.refactor-ia.nan.sdPlugin/bin/nan-dpapi.ps1
         shell: bash
 
+      - name: Diagnose the DPAPI helper (temporary)
+        shell: pwsh
+        run: |
+          $watch = [Diagnostics.Stopwatch]::StartNew()
+          $output = '{"operation":"get"}' | & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File native/nan-dpapi/nan-dpapi.ps1
+          Write-Host "helper output: $output"
+          Write-Host "helper elapsed ms: $($watch.ElapsedMilliseconds)"
+
       - name: Run tests (Windows)
         run: node scripts/run-tests.mjs
 
