@@ -171,7 +171,7 @@ test("reads Network and primary stores independently, orders them, and only dedu
   }
 });
 
-test("rejects root, profile, Network, and database symlinks without a key lookup", async () => {
+test("rejects root, profile, Network, and database symlinks without a key lookup", { skip: process.platform === "win32" }, async () => {
   for (const location of ["root", "profile", "network", "database"] as const) {
     const f = await fixture();
     try {

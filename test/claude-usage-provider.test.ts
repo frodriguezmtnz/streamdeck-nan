@@ -57,7 +57,7 @@ test("claude-usage-provider invokes the trusted official zero-inference command"
   }]);
 });
 
-test("claude-usage-provider passes only an explicit environment allowlist", async () => {
+test("claude-usage-provider passes only an explicit environment allowlist", { skip: process.platform === "win32" }, async () => {
   const previous = process.env.NAN_API_KEY;
   Object.assign(process.env, { NAN_API_KEY: "fixture-secret" });
   let received: ClaudeCommandOptions | undefined;
@@ -85,7 +85,7 @@ test("claude-usage-provider passes only an explicit environment allowlist", asyn
   );
 });
 
-test("trusted Claude resolution executes the resolved regular target, not its symlink", async (t) => {
+test("trusted Claude resolution executes the resolved regular target, not its symlink", { skip: process.platform === "win32" }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "claude-provider-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const target = join(directory, "claude-target");
@@ -107,7 +107,7 @@ test("trusted Claude resolution executes the resolved regular target, not its sy
   assert.equal(await resolveTrustedClaudeExecutable(launcher), undefined);
 });
 
-test("trusted Claude revalidation rejects inode replacement", async (t) => {
+test("trusted Claude revalidation rejects inode replacement", { skip: process.platform === "win32" }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "claude-inode-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const target = join(directory, "claude");
@@ -120,7 +120,7 @@ test("trusted Claude revalidation rejects inode replacement", async (t) => {
   assert.equal(await validateTrustedClaudeExecutable(identity), false);
 });
 
-test("trusted Claude revalidation rejects changed permissions and untrusted parents", async (t) => {
+test("trusted Claude revalidation rejects changed permissions and untrusted parents", { skip: process.platform === "win32" }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "claude-mode-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const target = join(directory, "claude");
@@ -139,7 +139,7 @@ test("trusted Claude revalidation rejects changed permissions and untrusted pare
   assert.equal(await resolveTrustedClaudeExecutable(target), undefined);
 });
 
-test("trusted executable permits only user-owned group-writable Homebrew parent chains", async (t) => {
+test("trusted executable permits only user-owned group-writable Homebrew parent chains", { skip: process.platform === "win32" }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "homebrew-trust-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const prefix = join(directory, "opt", "homebrew");

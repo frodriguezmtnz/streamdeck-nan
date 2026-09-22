@@ -8,7 +8,7 @@ import {
   resolveNanKeychainHelperPath,
 } from "../src/providers/nan/nan-keychain-client.ts";
 
-test("NaN Keychain client uses a fixed absolute helper and stdin-only secret writes", async () => {
+test("NaN Keychain client uses a fixed absolute helper and stdin-only secret writes", { skip: process.platform === "win32" }, async () => {
   const requests: Array<{ executable: string; args: readonly string[]; stdin: string; timeoutMs: number; maxStdoutBytes: number }> = [];
   const helperPath = resolveNanKeychainHelperPath("file:///Applications/com.refactor-ia.nan.sdPlugin/bin/plugin.js");
   const client = new NanKeychainClient(async (request) => {
