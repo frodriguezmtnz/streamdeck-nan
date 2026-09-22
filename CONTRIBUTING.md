@@ -32,6 +32,15 @@ Include as much detail as possible:
 
 4. Submit a pull request with a clear description and any relevant screenshots or logs.
 
+## Development on Windows
+
+The plugin targets both macOS and Windows, and one bundle serves both. On a Windows machine:
+
+- `pnpm check:workspace` and `pnpm test` work as written. The macOS-only tests (symlink, uid/mode, and `/Applications` checks plus the Keychain helper) skip automatically on `win32`, so the suite stays green locally.
+- `pnpm test:workspace` also runs the release script tests, which need macOS/Linux tooling (`zip`, `unzip`, `shasum`) and the macOS Keychain build; leave those to the macOS CI job.
+- `pnpm release:pack` and `pnpm release:pack:verify` require `zip` and stay on the macOS packaging job, which produces the single universal `.streamDeckPlugin`.
+- `pnpm build` runs Rollup and then copies the PowerShell DPAPI helper (`native/nan-dpapi/nan-dpapi.ps1`) into `com.refactor-ia.nan.sdPlugin/bin/`. The Windows CI job verifies that copy and runs the DPAPI round-trip e2e test.
+
 ## Project history
 
 Public history starts at the sanitized source import. Contributions proceed normally from that point; refer to the retained provenance notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

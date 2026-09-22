@@ -102,6 +102,26 @@ test("CI triggers pushes and pull requests with read-only permissions", async ()
   assert.match(ciCommands, /git diff --quiet -- com\.refactor-ia\.nan\.sdPlugin\/bin\/plugin\.js/);
 });
 
+test("CI exercises the Windows bundle and DPAPI helper without macOS-only packaging", async () => {
+  const ci = await workflow("ci.yml");
+  const job = ci.jobs["windows-build-and-test"];
+  assert.ok(job, "CI must run a Windows job");
+  assert.equal(job["runs-on"], "windows-latest");
+  const checkout = job.steps.find(({ uses }) => uses?.startsWith("actions/checkout@"));
+  assert.equal(checkout.with["persist-credentials"], false);
+  const commands = job.steps.map(({ run }) => run ?? "").join("\n");
+  const buildIndex = commands.indexOf("pnpm build");
+  const helperIndex = commands.indexOf("test -f com.refactor-ia.nan.sdPlugin/bin/nan-dpapi.ps1");
+  const testIndex = commands.indexOf("node scripts/run-tests.mjs");
+  assert.ok(buildIndex >= 0, "Windows CI must build the plugin bundle");
+  assert.ok(helperIndex >= 0, "Windows CI must verify the staged DPAPI helper");
+  assert.ok(testIndex >= 0, "Windows CI must run the test suite");
+  assert.ok(buildIndex < helperIndex && helperIndex < testIndex, "Windows CI must stage and verify the helper before running tests");
+  assert.match(commands, /pnpm check:workspace/);
+  assert.match(commands, /pnpm scan:secrets/);
+  assert.doesNotMatch(JSON.stringify(job), /release:pack:verify|\.github\/actions\/gitleaks/, "Windows CI must leave macOS-only packaging and Gitleaks to the macOS job");
+});
+
 test("release uses read-only packaging, artifact handoff, and isolated write publishing", async () => {
   const release = await workflow("release.yml");
   assert.deepEqual(release.on.push.tags, ["v*"]);

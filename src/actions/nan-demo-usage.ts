@@ -14,6 +14,8 @@ import { NanDashboardController, type NanDashboardUsage } from "./nan-dashboard-
 import { cycleNanLiveModel, NanSettingsWriteQueue, persistLatestNanSettings, resolveNanLiveModel } from "./nan-live-model.js";
 import { renderNanDashboardFeedback, renderNanImportProgress } from "./usage-feedback.js";
 import { createImportChromeSessionResult, parseImportChromeSessionMessage, type ImportChromeSessionRequest } from "./nan-chrome-import-message.js";
+import { respondToNanCapabilities } from "./nan-capabilities-responder.js";
+import { createSaveSessionResult, parseSaveSessionMessage, type SaveSessionRequest } from "./nan-save-session-message.js";
 
 export type NanDemoSettings = RefreshSettings & Partial<{
   model: string;
@@ -85,8 +87,10 @@ export class NanDemoUsage extends RefreshingAction<NanDemoSettings> {
 
   override async onSendToPlugin(ev: SendToPluginEvent<any, any>): Promise<void> {
     if (!ev.action.isDial() || !this.hasActiveLifecycle(ev.action)) return;
-    const request = parseImportChromeSessionMessage(ev.payload);
-    if (!request) return;
+    if (await respondToNanCapabilities(ev.action.id, ev.payload)) return;
+    const importRequest = parseImportChromeSessionMessage(ev.payload);
+    const saveRequest = importRequest === undefined ? parseSaveSessionMessage(ev.payload) : undefined;
+    if (!importRequest && !saveRequest) return;
     const action = ev.action as DialAction<NanDemoSettings>;
     const isCurrent = this.lifecycleGuard(action);
     const isSameAppearance = this.appearanceGuard(action);
@@ -95,7 +99,9 @@ export class NanDemoUsage extends RefreshingAction<NanDemoSettings> {
     let result: Awaited<ReturnType<NanDashboardController["importChromeSession"]>> | undefined;
     let outcome: "ready" | "failed" | "busy" = "failed";
     try {
-      result = await this.dashboard.importChromeSession();
+      result = importRequest
+        ? await this.dashboard.importChromeSession()
+        : await this.dashboard.saveSession(saveRequest!.value);
       outcome = result.state === "ready" ? "ready" : result.state === "import-busy" ? "busy" : "failed";
     } catch {
       result = { state: "import-unavailable" };
@@ -111,7 +117,8 @@ export class NanDemoUsage extends RefreshingAction<NanDemoSettings> {
         settings,
       );
     }
-    await this.sendImportResult(action, request, outcome, isCurrent, isSameAppearance);
+    if (importRequest) await this.sendImportResult(action, importRequest, outcome, isCurrent, isSameAppearance);
+    else if (saveRequest) await this.sendSaveResult(action, saveRequest, outcome, isCurrent, isSameAppearance);
   }
 
   private async sendImportResult(
@@ -124,6 +131,19 @@ export class NanDemoUsage extends RefreshingAction<NanDemoSettings> {
     if (!("requestId" in request) || !isCurrent() || !isSameAppearance() || streamDeck.ui.action?.id !== action.id) return;
     try {
       await streamDeck.ui.sendToPropertyInspector(createImportChromeSessionResult(request.requestId, outcome));
+    } catch {}
+  }
+
+  private async sendSaveResult(
+    action: DialAction<NanDemoSettings>,
+    request: SaveSessionRequest,
+    outcome: "ready" | "failed" | "busy",
+    isCurrent: () => boolean,
+    isSameAppearance: () => boolean,
+  ): Promise<void> {
+    if (!isCurrent() || !isSameAppearance() || streamDeck.ui.action?.id !== action.id) return;
+    try {
+      await streamDeck.ui.sendToPropertyInspector(createSaveSessionResult(request.requestId, outcome));
     } catch {}
   }
 

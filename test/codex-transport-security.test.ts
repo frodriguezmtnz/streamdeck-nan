@@ -58,7 +58,7 @@ test("validateCodexExecutable rejects directories", async () => {
   }
 });
 
-test("validateCodexExecutable accepts a valid executable", async () => {
+test("validateCodexExecutable accepts a valid executable", { skip: process.platform === "win32" }, async () => {
   const tmpDir = mkdtempSync(join(homedir(), ".codex-test-"));
   try {
     const exePath = join(tmpDir, "fake-codex");
@@ -140,7 +140,7 @@ test("spawn aborts when executable identity changes before spawn", async () => {
   assert.equal(spawned, false);
 });
 
-test("spawn aborts when a candidate symlink is replaced before validation", async () => {
+test("spawn aborts when a candidate symlink is replaced before validation", { skip: process.platform === "win32" }, async () => {
   const tmpDir = mkdtempSync(join(homedir(), ".codex-symlink-"));
   try {
     const first = join(tmpDir, "codex-a");

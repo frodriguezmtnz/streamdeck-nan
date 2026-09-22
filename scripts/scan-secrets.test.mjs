@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { findSecrets, scanReleaseArtifact } from "./scan-secrets.mjs";
+import { findSecrets, scanReleaseArtifact, verifyReleaseContents } from "./scan-secrets.mjs";
 
 test("secret scanner detects high-confidence JWT and assignment formats", () => {
   const jwt = ["eyJhbGciOiJIUzI1NiJ9", "eyJzdWIiOiIxMjM0NTY3ODkwIn0", "signature_value_123"].join(".");
@@ -27,4 +27,12 @@ test("release artifact scanner inspects extracted package contents", async () =>
   execFileSync("zip", ["-X", "-q", artifact, "plugin.sdPlugin/plugin.js"], { cwd: root });
   assert.throws(() => scanReleaseArtifact(artifact), /plugin\.js/);
   await rm(root, { recursive: true, force: true });
+});
+
+test("release package contents require both platform runtime entries", () => {
+  const root = "com.refactor-ia.nan.sdPlugin/";
+  const entries = [`${root}bin/plugin.js`, `${root}bin/nan-keychain`, `${root}bin/nan-dpapi.ps1`];
+  assert.doesNotThrow(() => verifyReleaseContents(entries));
+  assert.throws(() => verifyReleaseContents(entries.slice(0, 2)), /bin\/nan-dpapi\.ps1/);
+  assert.throws(() => verifyReleaseContents(entries.filter((entry) => !entry.endsWith("nan-keychain"))), /bin\/nan-keychain/);
 });

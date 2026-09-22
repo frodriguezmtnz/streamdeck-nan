@@ -42,6 +42,8 @@ The following are out of scope:
 
 ## Security Features
 
+- Dashboard session (macOS): imported from Chrome only on explicit click, filtered to NaN-owned domains, and stored in the macOS Keychain. The plugin never reads other browser data.
+- Dashboard session (Windows): Chrome's App-Bound-Encrypted store is not read. A session value the user pastes is validated against the NaN Dashboard API before it is stored, and the stored session is protected with current-user DPAPI.
 - Claude CLI: discovered via absolute paths, symlinks resolved, identity revalidated before execution.
 - Codex CLI: spawn validated via absolute path, symlink check, env allowlist, `shell: false`.
 - Grok CLI: spawn validated via env allowlist, `shell: false`.

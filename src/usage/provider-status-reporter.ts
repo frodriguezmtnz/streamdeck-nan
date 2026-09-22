@@ -13,7 +13,7 @@ export interface ProviderStatusReporter {
 
 const allowedProviderIds = new Set(["claude", "codex", "grok", "nan"]);
 const allowedStates = new Set<ProviderFailureState>([
-  "authentication", "executable-not-found", "timeout", "invalid-response", "unavailable", "stopped",
+  "authentication", "executable-not-found", "unsupported-platform", "timeout", "invalid-response", "unavailable", "stopped",
   "missing-configuration", "invalid-configuration", "unavailable-credentials", "unavailable-fetch",
 ]);
 

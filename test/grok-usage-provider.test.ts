@@ -6,7 +6,7 @@ import test from "node:test";
 import { grokExecutableCandidates, safeRuntimeEnvironment, spawnGrokAcp, type GrokAcpTransport, type SpawnGrokAcpOptions } from "../src/providers/grok/grok-acp-transport.ts";
 import { GrokUsageProvider, parseGrokBilling } from "../src/providers/grok/grok-usage-provider.ts";
 
-test("resolves an absolute GUI-local Grok candidate with a credential-free fixed environment", async () => {
+test("resolves an absolute GUI-local Grok candidate with a credential-free fixed environment", { skip: process.platform === "win32" }, async () => {
   const child = new FakeChild();
   let call: { command: string; args: string[]; options: Record<string, unknown> } | undefined;
   const candidates = grokExecutableCandidates("/Users/gui");

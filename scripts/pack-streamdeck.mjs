@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { chmod, cp, mkdtemp, readdir, rm, stat, unlink, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve, sep } from "node:path";
+import { buildNanDpapi } from "./build-nan-dpapi.mjs";
 
 const pluginName = "com.refactor-ia.nan.sdPlugin";
 const streamDeckCli = resolve("node_modules", "@elgato", "cli", "bin", "streamdeck.mjs");
@@ -53,6 +54,7 @@ async function filesUnder(path, prefix = "") {
 
 try {
   await rm("dist", { recursive: true, force: true });
+  await buildNanDpapi();
   const stagedPlugin = join(staging, pluginName);
   await cp(pluginName, stagedPlugin, {
     recursive: true,

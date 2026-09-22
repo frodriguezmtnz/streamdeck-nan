@@ -24,16 +24,16 @@ See your NaN account's usage limits and model usage on Stream Deck and Stream De
 
 ### Before you start
 
-- A Mac running **macOS 13 or later**. Windows and Linux are not supported.
-- The **Elgato Stream Deck app, version 7.1 or later**, installed on your Mac.
+- **macOS 13 or later** or **Windows 10 or later**. On macOS the NaN session is imported straight from Chrome; on Windows you paste a **Copy as cURL** request because Chrome does not expose its encrypted session to other apps (Linux is not supported).
+- The **Elgato Stream Deck app, version 7.1 or later**.
 - A Stream Deck device with a free action position. **NaN Usage** requires Stream Deck+, while **NaN Model Usage**, **NaN Total Tokens**, and **NaN Monthly Tokens** can import a session from a regular keypad key on supported Stream Deck devices.
 - **Google Chrome**, signed in to your NaN account with your NaN dashboard open.
 
 ### 1. Download the installer
 
-[**Download the latest macOS installer**](https://github.com/refactor-ia/streamdeck-nan/releases/latest/download/com.refactor-ia.nan.streamDeckPlugin)
+[**Download the latest installer**](https://github.com/refactor-ia/streamdeck-nan/releases/latest/download/com.refactor-ia.nan.streamDeckPlugin)
 
-The file is named **`com.refactor-ia.nan.streamDeckPlugin`**.
+The file is named **`com.refactor-ia.nan.streamDeckPlugin`**. The same installer serves macOS and Windows.
 
 Alternatively, open the [latest release](https://github.com/refactor-ia/streamdeck-nan/releases/latest), expand **Assets**, and select that file. Do **not** download **Source code (zip)** or **Source code (tar.gz)** to install the plugin. `SHA256SUMS` is an optional download for verifying file integrity, not an installer.
 
@@ -60,6 +60,17 @@ The plugin is installed, but it still needs access to your NaN session before it
 <p align="center"><em>The configuration panel imports your session only when you click the button.</em></p>
 
 You do not need to copy a cookie, token, or API key. Session import happens only when you request it; installing the plugin does not automatically sign you in. The configuration panel disables **Import session from Chrome** while it waits, then shows a safe success, retry, or already-in-progress message. If it is still waiting after two minutes, the panel lets you retry; that message does not cancel the import already running in the plugin.
+
+#### On Windows
+
+Windows does not let the plugin read Chrome's encrypted session (Chrome 127+ uses App-Bound Encryption and locks its session database while running), so connect your account by pasting the session instead:
+
+1. In **Google Chrome**, open your NaN dashboard and its browser developer tools.
+2. On the **Network** tab, right-click a request to the NaN dashboard and choose **Copy as cURL**.
+3. In the Stream Deck configuration panel of a NaN action, paste it into the session box and click **Save session**.
+4. Wait for usage data to appear, then touch the NaN Usage dial or press a keypad action to refresh it.
+
+The panel confirms the save, then shows the same success, retry, or already-in-progress messages as macOS. Only the session you paste is used; on Windows the plugin never reads Chrome's encrypted store.
 
 <p align="center">
   <img src="docs/screenshots/nan-dial-actions.png" alt="NaN dial actions listed in the Stream Deck+ app" width="520">
@@ -92,13 +103,14 @@ If you are upgrading from **v1.0.3 or earlier**, add the new actions again: v1.0
 
 - **The model list is empty:** first import a session from the configuration panel of **NaN Usage**, **NaN Model Usage**, **NaN Total Tokens**, or **NaN Monthly Tokens**. If the session is already connected, click **Refresh models** on the model button instead of importing it again. Installing the plugin or opening the dashboard alone is not enough.
 - **The import button does nothing, or Stream Deck says the plugin is unstable:** make sure you installed **v1.0.5 or later**. Earlier standalone packages omitted a required runtime dependency; v1.0.5 fixes that startup problem.
-- **It still does not work:** [open an issue](https://github.com/refactor-ia/streamdeck-nan/issues) with your plugin, macOS, and Stream Deck app versions, the action you selected, and any visible error message. Never include cookies, tokens, passwords, or private account data.
+- **On Windows, the session stopped working:** dashboard sessions expire, and so does a pasted request. In Chrome, open your NaN dashboard, use **Network → Copy as cURL** on a fresh NaN request, paste it again, and click **Save session**. The button stays disabled until you paste something.
+- **It still does not work:** [open an issue](https://github.com/refactor-ia/streamdeck-nan/issues) with your plugin, macOS or Windows, and Stream Deck app versions, the action you selected, and any visible error message. Never include cookies, tokens, passwords, or private account data.
 
 Keep the saved session unless there is a specific reason to replace it; an empty model list alone does not identify the cause.
 
 ### Dashboard recovery
 
-In published **v1.0.7**, the selected action's configuration panel has no import progress or result feedback. On `main` (for an upcoming release), it will show the feedback below. In either version, an import starts only when you explicitly click **Import session from Chrome**.
+In published **v1.0.7**, the selected action's configuration panel has no import progress or result feedback. On `main` (for an upcoming release), it will show the feedback below. In either version, an import starts only when you explicitly click **Import session from Chrome**. On Windows the equivalent panel instead asks you to paste a session and reports the messages below when you click **Save session**.
 
 **Dial recovery vocabulary** — **NaN Usage** on Stream Deck+ is the dial; keypad actions do not expose its full status vocabulary.
 
@@ -125,6 +137,20 @@ In published **v1.0.7**, the selected action's configuration panel has no import
 | Import could not be completed. Check Chrome, then try again. | Retry after checking Chrome. |
 | Another import is already in progress. Please wait and try again. | Wait, then try again. |
 | Still waiting for the plugin. You can retry when ready. | The two-minute inspector watchdog has elapsed; it does not cancel any backend import. |
+| Unable to contact the plugin. Reopen this action and try again. | Reopen this action, then try again. |
+| Connection closed. Reopen this action to try again. | Reopen this action, then try again. |
+
+**Windows paste feedback** — On Windows the panel saves a pasted session instead of importing from Chrome.
+
+| Visible message | Meaning and next step |
+| --- | --- |
+| Paste a session value first. | The box is empty or only whitespace; nothing was sent. |
+| That session value is too large. | Trim the pasted value; the panel rejected it locally without contacting the plugin. |
+| Saving session. Please wait. | The pasted session is being validated and saved. |
+| Session saved. Usage will refresh shortly. | The session was accepted. |
+| That session was not accepted. Check it and try again. | The value was expired or incomplete; copy a fresh **Copy as cURL** request. |
+| Another session change is in progress. Please wait and try again. | Wait, then try again. |
+| Still waiting for the plugin. You can retry when ready. | The two-minute inspector watchdog has elapsed; it does not cancel the save already running in the plugin. |
 | Unable to contact the plugin. Reopen this action and try again. | Reopen this action, then try again. |
 | Connection closed. Reopen this action to try again. | Reopen this action, then try again. |
 
@@ -231,8 +257,16 @@ plugin.
 
 ### Platform Support
 
-The current manifest supports macOS only. Encoder actions target Stream Deck+;
-NaN Model Usage, NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard are also available as standard keypad actions.
+The manifest declares **macOS 13 or later** and **Windows 10 or later**. On macOS,
+select a NaN action and click **Import session from Chrome** to read the session
+automatically. Windows does not expose Chrome's encrypted session to external apps
+(App-Bound Encryption, Chrome 127+) and Chrome locks its session database while it
+runs, so on Windows you paste a **Copy as cURL** request from your browser developer
+tools into the action's configuration panel instead. The external Claude, Codex, and
+Grok integrations remain macOS-only; on Windows their dials show **MAC ONLY** rather
+than probing for local CLIs. Encoder actions target Stream Deck+; NaN Model Usage,
+NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard are also available as standard
+keypad actions.
 
 ## Contributing
 

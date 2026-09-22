@@ -135,6 +135,17 @@
     button.icon { width: 32px; padding: 0; }
     button:disabled { opacity: 0.55; cursor: default; }
     button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--pi-accent); outline-offset: 1px; }
+    textarea {
+      width: 100%;
+      min-height: 64px;
+      padding: 8px 10px;
+      color: var(--pi-text-strong);
+      background: var(--pi-control);
+      border: 1px solid var(--pi-border-strong);
+      border-radius: var(--pi-radius);
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      resize: vertical;
+    }
     .status {
       display: flex;
       align-items: flex-start;
@@ -190,6 +201,16 @@
     <p id="importChromeSessionStatus" role="status" aria-live="polite" class="status"></p>
     <p>Dashboard quota uses an imported Chrome session only after you choose Import session from Chrome.</p>
   </section>
+  <section id="nanSessionPasteSettings" hidden>
+    <h2>Session</h2>
+    <p>Automatic import is unavailable on this system. In your browser developer tools, copy the request as cURL for a NaN dashboard call, then paste it below.</p>
+    <textarea id="nanSessionPaste" rows="4" spellcheck="false" autocomplete="off" placeholder="Paste the session value or a Copy as cURL request"></textarea>
+    <button id="saveSession" class="primary" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+      <span>Save session</span>
+    </button>
+    <p id="saveSessionStatus" role="status" aria-live="polite" class="status"></p>
+  </section>
   <section id="nanSettings" hidden>
     <h2>Model</h2>
     <label id="nanModelRow" class="select-wrap">
@@ -227,6 +248,11 @@
     const MODELS = "nan.modelUsage.models.v1";
     const IMPORT_CHROME_SESSION = "nan.importChromeSession.v1";
     const IMPORT_CHROME_SESSION_RESULT = "nan.importChromeSession.result.v1";
+    const CAPABILITIES = "nan.capabilities.v1";
+    const CAPABILITIES_RESULT = "nan.capabilities.result.v1";
+    const SAVE_SESSION = "nan.saveSession.v1";
+    const SAVE_SESSION_RESULT = "nan.saveSession.result.v1";
+    const SAVE_SESSION_MAX_CHARS = 8192;
     const ACTION_TITLES = {
       "com.refactor-ia.nan.claude": ["Claude Code Usage", "Stream Deck+ dial"],
       "com.refactor-ia.nan.codex": ["GPT / OpenAI Usage", "Stream Deck+ dial"],
@@ -247,6 +273,12 @@
     let pendingImportRequestId = "";
     let importWatchdog;
     let importRequestSequence = 0;
+    let capabilitiesReady = false;
+    let capabilities = { chromeImport: false, pasteSession: false };
+    let capabilityRequestSequence = 0;
+    let pendingSaveRequestId = "";
+    let saveWatchdog;
+    let saveRequestSequence = 0;
 
     function connectElgatoStreamDeckSocket(port, uuid, registerEvent, _info, actionInfo) {
       context = uuid;
@@ -255,6 +287,7 @@
         send(registerEvent, { uuid });
         send("getSettings", { context });
         requestModels();
+        requestCapabilities();
       });
       socket.addEventListener("message", ({ data }) => {
         try {
@@ -268,9 +301,14 @@
             render();
           }
           if (message?.event === "sendToPropertyInspector") receiveImportResult(message.payload);
+          if (message?.event === "sendToPropertyInspector" && message.payload?.kind === CAPABILITIES_RESULT) receiveCapabilities(message.payload);
+          if (message?.event === "sendToPropertyInspector") receiveSaveResult(message.payload);
         } catch (_) {}
       });
-      socket.addEventListener("close", () => clearPendingImport("Connection closed. Reopen this action to try again."));
+      socket.addEventListener("close", () => {
+        clearPendingImport("Connection closed. Reopen this action to try again.");
+        clearPendingSave("Connection closed. Reopen this action to try again.");
+      });
       try {
         const parsedActionInfo = JSON.parse(actionInfo);
         actionUuid = parsedActionInfo.action || "";
@@ -325,6 +363,63 @@
       else if (payload.outcome === "failed") clearPendingImport("Import could not be completed. Check Chrome, then try again.", "error");
       else if (payload.outcome === "busy") clearPendingImport("Another import is already in progress. Please wait and try again.");
     }
+    function requestCapabilities() {
+      if (!isNanChromeImportAction() || socket?.readyState !== WebSocket.OPEN) return;
+      const requestId = `caps_${Date.now().toString(36)}_${++capabilityRequestSequence}`;
+      if (!IMPORT_REQUEST_ID.test(requestId)) return;
+      send("sendToPlugin", { context, payload: { kind: CAPABILITIES, requestId } });
+    }
+    function receiveCapabilities(payload) {
+      if (typeof payload !== "object" || payload === null || payload.kind !== CAPABILITIES_RESULT) return;
+      if (typeof payload.chromeImport !== "boolean" || typeof payload.pasteSession !== "boolean") return;
+      capabilities = { chromeImport: payload.chromeImport, pasteSession: payload.pasteSession };
+      capabilitiesReady = true;
+      render();
+    }
+    function renderSaveStatus(message, tone) {
+      const button = document.querySelector("#saveSession");
+      button.disabled = pendingSaveRequestId !== "";
+      const status = document.querySelector("#saveSessionStatus");
+      status.textContent = message || "";
+      if (status.dataset) status.dataset.tone = tone || (pendingSaveRequestId ? "pending" : "");
+    }
+    function clearPendingSave(message, tone) {
+      if (saveWatchdog) clearTimeout(saveWatchdog);
+      saveWatchdog = undefined;
+      pendingSaveRequestId = "";
+      renderSaveStatus(message, tone);
+    }
+    function beginSave() {
+      if (pendingSaveRequestId) return;
+      const input = document.querySelector("#nanSessionPaste");
+      const value = typeof input.value === "string" ? input.value.trim() : "";
+      if (!value) {
+        renderSaveStatus("Paste a session value first.", "error");
+        return;
+      }
+      if (value.length > SAVE_SESSION_MAX_CHARS) {
+        renderSaveStatus("That session value is too large.", "error");
+        return;
+      }
+      const requestId = `save_${Date.now().toString(36)}_${++saveRequestSequence}`;
+      if (!IMPORT_REQUEST_ID.test(requestId)) return;
+      if (!send("sendToPlugin", { context, payload: { kind: SAVE_SESSION, requestId, value } })) {
+        renderSaveStatus("Unable to contact the plugin. Reopen this action and try again.");
+        return;
+      }
+      pendingSaveRequestId = requestId;
+      renderSaveStatus("Saving session. Please wait.");
+      saveWatchdog = setTimeout(() => {
+        if (pendingSaveRequestId === requestId) clearPendingSave("Still waiting for the plugin. You can retry when ready.");
+      }, IMPORT_WATCHDOG_MS);
+    }
+    function receiveSaveResult(payload) {
+      if (!pendingSaveRequestId || typeof payload !== "object" || payload === null) return;
+      if (Object.keys(payload).length !== 3 || payload.kind !== SAVE_SESSION_RESULT || payload.requestId !== pendingSaveRequestId) return;
+      if (payload.outcome === "ready") clearPendingSave("Session saved. Usage will refresh shortly.", "ok");
+      else if (payload.outcome === "failed") clearPendingSave("That session was not accepted. Check it and try again.", "error");
+      else if (payload.outcome === "busy") clearPendingSave("Another session change is in progress. Please wait and try again.");
+    }
     function save(patch) {
       if (actionUuid === NAN_DASHBOARD_ACTION) return;
       settings = { ...settings, ...patch };
@@ -376,8 +471,11 @@
       const isNanMetrics = actionUuid === NAN_TOTAL_TOKENS_ACTION || actionUuid === NAN_MONTHLY_TOKENS_ACTION;
       const isNanChromeImportAction = isNanDemo || isNanModel || isNanMetrics;
       const isNanDashboardLauncher = actionUuid === NAN_DASHBOARD_ACTION;
+      const canImportSession = isNanChromeImportAction && (!capabilitiesReady || capabilities.chromeImport);
+      const canPasteSession = isNanChromeImportAction && capabilitiesReady && capabilities.pasteSession;
       document.querySelector("#refreshSettings").hidden = isNanDemo || isNanModel || isNanMetrics || isNanDashboardLauncher;
-      document.querySelector("#nanChromeImportSettings").hidden = !isNanChromeImportAction;
+      document.querySelector("#nanChromeImportSettings").hidden = !canImportSession;
+      document.querySelector("#nanSessionPasteSettings").hidden = !canPasteSession;
       document.querySelector("#nanSettings").hidden = !isNanDemo;
       document.querySelector("#nanModelUsageSettings").hidden = !isNanModel;
       document.querySelector("#autoRefresh").checked = settings.autoRefresh !== false;
@@ -412,6 +510,7 @@
       send("sendToPlugin", { context, payload: { kind: REFRESH_MODELS } });
     });
     document.querySelector("#importChromeSession").addEventListener("click", beginImport);
+    document.querySelector("#saveSession").addEventListener("click", beginSave);
   </script>
 </body>
 </html>

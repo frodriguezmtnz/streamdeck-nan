@@ -68,6 +68,39 @@ jobs:
           (cd dist && shasum -a 256 *.streamDeckPlugin > SHA256SUMS)
           node scripts/release-contract.mjs "v$(node -p "require('./package.json').version")" unsigned-ci
 
+  windows-build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: { persist-credentials: false }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@11.13.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck and Stream Deck validation
+        run: pnpm check:workspace
+
+      - name: Build plugin bundle and Windows DPAPI helper
+        run: pnpm build
+
+      - name: Verify Windows DPAPI helper is staged
+        run: test -f com.refactor-ia.nan.sdPlugin/bin/nan-dpapi.ps1
+        shell: bash
+
+      - name: Run tests (Windows)
+        run: node scripts/run-tests.mjs
+
+      - name: Secret scan (pre-built binary)
+        run: pnpm scan:secrets
+
   markdown-links:
     runs-on: ubuntu-latest
     steps:
