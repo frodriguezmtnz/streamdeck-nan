@@ -96,12 +96,47 @@ jobs:
         shell: bash
 
       - name: Diagnose the DPAPI helper (temporary)
-        shell: pwsh
+        shell: bash
         run: |
-          $watch = [Diagnostics.Stopwatch]::StartNew()
-          $output = '{"operation":"get"}' | & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File native/nan-dpapi/nan-dpapi.ps1
-          Write-Host "helper output: $output"
-          Write-Host "helper elapsed ms: $($watch.ElapsedMilliseconds)"
+          cat > "$RUNNER_TEMP/dpapi-diagnose.mjs" <<'EOF'
+          import { spawn } from "node:child_process";
+
+          const helper = "native/nan-dpapi/nan-dpapi.ps1";
+          const powerShell = `${process.env.SystemRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+          const args = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", helper];
+          const names = ["SystemRoot", "windir", "SystemDrive", "TEMP", "TMP", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "COMSPEC", "PATHEXT"];
+
+          function run(label, env) {
+            return new Promise((resolve) => {
+              const started = Date.now();
+              const child = spawn(powerShell, args, { env, shell: false, stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+              let stdout = "";
+              let stderr = "";
+              let settled = false;
+              const finish = (message) => {
+                if (settled) return;
+                settled = true;
+                console.log(label, message, "ms", Date.now() - started, "stdout", JSON.stringify(stdout), "stderr", JSON.stringify(stderr.slice(0, 500)));
+                resolve();
+              };
+              child.stdout.on("data", (chunk) => { stdout += chunk; });
+              child.stderr.on("data", (chunk) => { stderr += chunk; });
+              child.on("error", (error) => finish(`spawn-error ${error.message}`));
+              child.on("close", (code) => finish(`exit ${code}`));
+              child.stdin.end('{"operation":"get"}\n');
+              setTimeout(() => { child.kill(); finish("timeout"); }, 20_000);
+            });
+          }
+
+          const restricted = {};
+          for (const name of names) if (process.env[name] !== undefined) restricted[name] = process.env[name];
+
+          await run("restricted", restricted);
+          await run("restricted+PSModulePath", { ...restricted, PSModulePath: process.env.PSModulePath });
+          await run("restricted+PATH", { ...restricted, PATH: process.env.PATH });
+          await run("full-env", { ...process.env });
+          EOF
+          node "$RUNNER_TEMP/dpapi-diagnose.mjs"
 
       - name: Run tests (Windows)
         run: node scripts/run-tests.mjs
