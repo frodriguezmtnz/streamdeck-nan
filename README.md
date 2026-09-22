@@ -31,9 +31,9 @@ See your NaN account's usage limits and model usage on Stream Deck and Stream De
 
 ### 1. Download the installer
 
-[**Download the latest macOS installer**](https://github.com/refactor-ia/streamdeck-nan/releases/latest/download/com.refactor-ia.nan.streamDeckPlugin)
+[**Download the latest installer**](https://github.com/refactor-ia/streamdeck-nan/releases/latest/download/com.refactor-ia.nan.streamDeckPlugin)
 
-The file is named **`com.refactor-ia.nan.streamDeckPlugin`**.
+The file is named **`com.refactor-ia.nan.streamDeckPlugin`**. The same installer serves macOS and Windows.
 
 Alternatively, open the [latest release](https://github.com/refactor-ia/streamdeck-nan/releases/latest), expand **Assets**, and select that file. Do **not** download **Source code (zip)** or **Source code (tar.gz)** to install the plugin. `SHA256SUMS` is an optional download for verifying file integrity, not an installer.
 
