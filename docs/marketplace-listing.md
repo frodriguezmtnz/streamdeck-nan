@@ -16,10 +16,10 @@ NaN Dashboard brings your NaN AI usage to Stream Deck. See your remaining quota 
 
 - **NaN Usage dial (Stream Deck+):** rotate/touch to refresh your quota; high-contrast warning levels when you run low.
 - **NaN Model Usage / Total Tokens / Monthly Tokens (Stream Deck & Stream Deck+):** live keypad tiles that refresh automatically.
-- **Secure session import:** click **Import session from Chrome** once in the action's configuration panel; your session is validated and stored in the macOS Keychain. Nothing is sent anywhere except the NaN Dashboard API, with your own session.
+- **Secure session import:** connect your NaN session once in the action's configuration panel. On macOS, click **Import session from Chrome**; on Windows, paste a **Copy as cURL** request from your browser developer tools and click **Save session**. Your session is validated and stored in the macOS Keychain, or in a current-user DPAPI-protected file on Windows. Nothing is sent anywhere except the NaN Dashboard API, with your own session.
 - **Bonus monitors (no NaN account needed):** Claude Code usage and OpenAI Codex usage dials. A Grok monitor is experimental.
 
-Requires macOS 13+ and the Stream Deck 7.1+ app. NaN account and Chrome required for NaN actions. The plugin is open source: <https://github.com/refactor-ia/streamdeck-nan>.
+Requires macOS 13+ or Windows 10+ and the Stream Deck 7.1+ app. NaN account required for NaN actions; on macOS, Chrome is required for the session import. The plugin is open source: <https://github.com/refactor-ia/streamdeck-nan>.
 
 ## Keywords / search terms
 
@@ -46,7 +46,7 @@ The Maker Console rejects submissions with `SDKVersion: 2` and DRM off. Per offi
 
 ## Open portal questions (verify at submission)
 
-- Exact review checklist and privacy requirements for plugins that read browser cookies (declare Chrome access explicitly and link the privacy policy).
+- Exact review checklist and privacy requirements for plugins that read browser cookies on macOS (declare Chrome access explicitly and link the privacy policy); confirm how the Windows paste path, which never reads Chrome, should be described.
 - Whether unsigned bundles are accepted for review the same way direct distribution is, or whether signing (#14) should land first.
 - Screenshot dimensions/format required by the portal.
 

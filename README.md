@@ -103,13 +103,14 @@ If you are upgrading from **v1.0.3 or earlier**, add the new actions again: v1.0
 
 - **The model list is empty:** first import a session from the configuration panel of **NaN Usage**, **NaN Model Usage**, **NaN Total Tokens**, or **NaN Monthly Tokens**. If the session is already connected, click **Refresh models** on the model button instead of importing it again. Installing the plugin or opening the dashboard alone is not enough.
 - **The import button does nothing, or Stream Deck says the plugin is unstable:** make sure you installed **v1.0.5 or later**. Earlier standalone packages omitted a required runtime dependency; v1.0.5 fixes that startup problem.
-- **It still does not work:** [open an issue](https://github.com/refactor-ia/streamdeck-nan/issues) with your plugin, macOS, and Stream Deck app versions, the action you selected, and any visible error message. Never include cookies, tokens, passwords, or private account data.
+- **On Windows, the session stopped working:** dashboard sessions expire, and so does a pasted request. In Chrome, open your NaN dashboard, use **Network → Copy as cURL** on a fresh NaN request, paste it again, and click **Save session**. The button stays disabled until you paste something.
+- **It still does not work:** [open an issue](https://github.com/refactor-ia/streamdeck-nan/issues) with your plugin, macOS or Windows, and Stream Deck app versions, the action you selected, and any visible error message. Never include cookies, tokens, passwords, or private account data.
 
 Keep the saved session unless there is a specific reason to replace it; an empty model list alone does not identify the cause.
 
 ### Dashboard recovery
 
-In published **v1.0.7**, the selected action's configuration panel has no import progress or result feedback. On `main` (for an upcoming release), it will show the feedback below. In either version, an import starts only when you explicitly click **Import session from Chrome**.
+In published **v1.0.7**, the selected action's configuration panel has no import progress or result feedback. On `main` (for an upcoming release), it will show the feedback below. In either version, an import starts only when you explicitly click **Import session from Chrome**. On Windows the equivalent panel instead asks you to paste a session and reports the messages below when you click **Save session**.
 
 **Dial recovery vocabulary** — **NaN Usage** on Stream Deck+ is the dial; keypad actions do not expose its full status vocabulary.
 
@@ -136,6 +137,20 @@ In published **v1.0.7**, the selected action's configuration panel has no import
 | Import could not be completed. Check Chrome, then try again. | Retry after checking Chrome. |
 | Another import is already in progress. Please wait and try again. | Wait, then try again. |
 | Still waiting for the plugin. You can retry when ready. | The two-minute inspector watchdog has elapsed; it does not cancel any backend import. |
+| Unable to contact the plugin. Reopen this action and try again. | Reopen this action, then try again. |
+| Connection closed. Reopen this action to try again. | Reopen this action, then try again. |
+
+**Windows paste feedback** — On Windows the panel saves a pasted session instead of importing from Chrome.
+
+| Visible message | Meaning and next step |
+| --- | --- |
+| Paste a session value first. | The box is empty or only whitespace; nothing was sent. |
+| That session value is too large. | Trim the pasted value; the panel rejected it locally without contacting the plugin. |
+| Saving session. Please wait. | The pasted session is being validated and saved. |
+| Session saved. Usage will refresh shortly. | The session was accepted. |
+| That session was not accepted. Check it and try again. | The value was expired or incomplete; copy a fresh **Copy as cURL** request. |
+| Another session change is in progress. Please wait and try again. | Wait, then try again. |
+| Still waiting for the plugin. You can retry when ready. | The two-minute inspector watchdog has elapsed; it does not cancel the save already running in the plugin. |
 | Unable to contact the plugin. Reopen this action and try again. | Reopen this action, then try again. |
 | Connection closed. Reopen this action to try again. | Reopen this action, then try again. |
 
