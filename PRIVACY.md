@@ -4,8 +4,10 @@ _Last updated: 2026-09-11. Applies to the NaN Dashboard Stream Deck plugin by Re
 
 ## What the plugin accesses
 
-- **Chrome cookies for NaN domains only.** When you explicitly click **Import session from Chrome** in a NaN action's configuration panel, the plugin reads cookies from your local Chrome profile, filtered to NaN-owned domains, to build a single dashboard session. It never reads cookies for other sites, never reads saved passwords, browsing history, or other browser data.
+- **Chrome cookies for NaN domains only (macOS).** When you explicitly click **Import session from Chrome** in a NaN action's configuration panel, the plugin reads cookies from your local Chrome profile, filtered to NaN-owned domains, to build a single dashboard session. It never reads cookies for other sites, never reads saved passwords, browsing history, or other browser data.
+- **Explicit session paste (Windows).** On Windows the plugin does not read Chrome at all. You paste a **Copy as cURL** request or session value into the configuration panel, and the plugin validates it against the NaN Dashboard API before storing it.
 - **macOS Keychain.** The plugin uses the Chrome Safe Storage key (via the system Keychain) to decrypt only the NaN session cookies, and stores the validated session in its own Keychain item (`com.barbatdev.ai-usage.nan-session`, a compatibility identity). Keychain prompts come from macOS.
+- **Windows DPAPI.** On Windows the validated session is stored in a file protected with current-user DPAPI under `%LOCALAPPDATA%\NaN Dashboard`. Only your Windows account can decrypt it, and the plugin never writes the session to Stream Deck settings or logs.
 - **NaN Dashboard API.** With your session, the plugin queries fixed NaN Dashboard endpoints to display your own quota, model usage and token metrics. All requests originate from your machine using your session.
 
 ## What we do NOT do
@@ -17,7 +19,7 @@ _Last updated: 2026-09-11. Applies to the NaN Dashboard Stream Deck plugin by Re
 
 ## Storage and removal
 
-The imported session lives in your macOS Keychain and can be removed by uninstalling the plugin or resetting the session from the plugin UI. No data is stored on any Refactor IA server.
+The imported session lives in your macOS Keychain or, on Windows, in a current-user DPAPI-protected file under `%LOCALAPPDATA%\NaN Dashboard`. It can be removed by uninstalling the plugin or resetting the session from the plugin UI. No data is stored on any Refactor IA server.
 
 ## Contact
 

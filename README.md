@@ -24,7 +24,7 @@ See your NaN account's usage limits and model usage on Stream Deck and Stream De
 
 ### Before you start
 
-- **macOS 13 or later** for the full feature set. On **Windows 10 or later** the plugin loads, but session import and the external Claude, Codex, and Grok integrations are not yet available (Linux is not supported).
+- **macOS 13 or later** or **Windows 10 or later**. On macOS the NaN session is imported straight from Chrome; on Windows you paste a **Copy as cURL** request because Chrome does not expose its encrypted session to other apps (Linux is not supported).
 - The **Elgato Stream Deck app, version 7.1 or later**.
 - A Stream Deck device with a free action position. **NaN Usage** requires Stream Deck+, while **NaN Model Usage**, **NaN Total Tokens**, and **NaN Monthly Tokens** can import a session from a regular keypad key on supported Stream Deck devices.
 - **Google Chrome**, signed in to your NaN account with your NaN dashboard open.
@@ -60,6 +60,17 @@ The plugin is installed, but it still needs access to your NaN session before it
 <p align="center"><em>The configuration panel imports your session only when you click the button.</em></p>
 
 You do not need to copy a cookie, token, or API key. Session import happens only when you request it; installing the plugin does not automatically sign you in. The configuration panel disables **Import session from Chrome** while it waits, then shows a safe success, retry, or already-in-progress message. If it is still waiting after two minutes, the panel lets you retry; that message does not cancel the import already running in the plugin.
+
+#### On Windows
+
+Windows does not let the plugin read Chrome's encrypted session (Chrome 127+ uses App-Bound Encryption and locks its session database while running), so connect your account by pasting the session instead:
+
+1. In **Google Chrome**, open your NaN dashboard and its browser developer tools.
+2. On the **Network** tab, right-click a request to the NaN dashboard and choose **Copy as cURL**.
+3. In the Stream Deck configuration panel of a NaN action, paste it into the session box and click **Save session**.
+4. Wait for usage data to appear, then touch the NaN Usage dial or press a keypad action to refresh it.
+
+The panel confirms the save, then shows the same success, retry, or already-in-progress messages as macOS. Only the session you paste is used; on Windows the plugin never reads Chrome's encrypted store.
 
 <p align="center">
   <img src="docs/screenshots/nan-dial-actions.png" alt="NaN dial actions listed in the Stream Deck+ app" width="520">
@@ -231,12 +242,16 @@ plugin.
 
 ### Platform Support
 
-The manifest declares **macOS 13 or later** and **Windows 10 or later**. Windows
-support is in progress: the NaN Dashboard session import still requires macOS, and
-the external Claude, Codex, and Grok integrations are macOS-only (on Windows their
-dials show **MAC ONLY** rather than probing for local CLIs). Encoder actions target
-Stream Deck+; NaN Model Usage, NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard
-are also available as standard keypad actions.
+The manifest declares **macOS 13 or later** and **Windows 10 or later**. On macOS,
+select a NaN action and click **Import session from Chrome** to read the session
+automatically. Windows does not expose Chrome's encrypted session to external apps
+(App-Bound Encryption, Chrome 127+) and Chrome locks its session database while it
+runs, so on Windows you paste a **Copy as cURL** request from your browser developer
+tools into the action's configuration panel instead. The external Claude, Codex, and
+Grok integrations remain macOS-only; on Windows their dials show **MAC ONLY** rather
+than probing for local CLIs. Encoder actions target Stream Deck+; NaN Model Usage,
+NaN Total Tokens, NaN Monthly Tokens, and NaN Dashboard are also available as standard
+keypad actions.
 
 ## Contributing
 
