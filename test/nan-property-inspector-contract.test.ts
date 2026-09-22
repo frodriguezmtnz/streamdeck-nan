@@ -25,7 +25,8 @@ test("NaN inspector exposes explicit dashboard import for the dial and all three
   assert.match(inspector, /id="importChromeSession"/);
   assert.match(inspector, /Dashboard quota uses an imported Chrome session/);
   assert.match(inspector, /const isNanChromeImportAction = isNanDemo \|\| isNanModel \|\| isNanMetrics/);
-  assert.match(inspector, /#nanChromeImportSettings"\)\.hidden = !isNanChromeImportAction/);
+  assert.match(inspector, /const canImportSession = isNanChromeImportAction && \(!capabilitiesReady \|\| capabilities\.chromeImport\)/);
+  assert.match(inspector, /#nanChromeImportSettings"\)\.hidden = !canImportSession/);
   assert.match(inspector, /id="importChromeSessionStatus" role="status" aria-live="polite"/);
   assert.match(inspector, /const IMPORT_CHROME_SESSION_RESULT = "nan\.importChromeSession\.result\.v1"/);
   assert.match(inspector, /const IMPORT_WATCHDOG_MS = 120_000/);
@@ -33,6 +34,50 @@ test("NaN inspector exposes explicit dashboard import for the dial and all three
   assert.match(inspector, /pendingImportRequestId/);
   assert.match(inspector, /socket\.addEventListener\("close"/);
   assert.doesNotMatch(inspector, /nanSource|Legacy collector|collector-config|Keychain|cookie|https?:\/\//i);
+});
+
+test("NaN inspector exposes a capability-gated paste-session path without leaking browser internals", () => {
+  assert.match(inspector, /id="nanSessionPasteSettings"/);
+  assert.match(inspector, /id="nanSessionPaste"/);
+  assert.match(inspector, /id="saveSession"/);
+  assert.match(inspector, /id="saveSessionStatus" role="status" aria-live="polite"/);
+  assert.match(inspector, /const CAPABILITIES = "nan\.capabilities\.v1"/);
+  assert.match(inspector, /const CAPABILITIES_RESULT = "nan\.capabilities\.result\.v1"/);
+  assert.match(inspector, /const SAVE_SESSION = "nan\.saveSession\.v1"/);
+  assert.match(inspector, /const SAVE_SESSION_RESULT = "nan\.saveSession\.result\.v1"/);
+  assert.match(inspector, /const canPasteSession = isNanChromeImportAction && capabilitiesReady && capabilities\.pasteSession/);
+  assert.match(inspector, /#nanSessionPasteSettings"\)\.hidden = !canPasteSession/);
+  assert.match(inspector, /payload: \{ kind: CAPABILITIES, requestId \}/);
+  assert.match(inspector, /payload: \{ kind: SAVE_SESSION, requestId, value \}/);
+  assert.doesNotMatch(inspector, /nanSource|Legacy collector|collector-config|Keychain|cookie|https?:\/\//i);
+});
+
+test("property inspector reveals the paste path only for Windows capabilities and correlates saves", () => {
+  const harness = createInspectorHarness();
+  harness.connect("com.refactor-ia.nan.nan-demo");
+  harness.socket.emit("open");
+  assert.equal(harness.importSection.hidden, false);
+  assert.equal(harness.pasteSection.hidden, true);
+  assert.equal(harness.capabilityRequests().length, 1);
+
+  harness.socket.message({ kind: "nan.capabilities.result.v1", chromeImport: false, pasteSession: true });
+  assert.equal(harness.importSection.hidden, true);
+  assert.equal(harness.pasteSection.hidden, false);
+
+  harness.clickSave();
+  assert.equal(harness.saveStatus.textContent, "Paste a session value first.");
+  harness.paste("session=opaque");
+  harness.clickSave();
+  const request = harness.lastSaveRequest();
+  assert.match(request.requestId, /^[A-Za-z0-9_-]{1,64}$/);
+  assert.equal(request.value, "session=opaque");
+  assert.equal(harness.saveButton.disabled, true);
+
+  harness.socket.message({ kind: "nan.saveSession.result.v1", requestId: "other", outcome: "ready" });
+  assert.equal(harness.saveButton.disabled, true);
+  harness.socket.message({ kind: "nan.saveSession.result.v1", requestId: request.requestId, outcome: "ready" });
+  assert.equal(harness.saveButton.disabled, false);
+  assert.equal(harness.saveStatus.textContent, "Session saved. Usage will refresh shortly.");
 });
 
 test("property inspector executes correlated import UI states without accepting foreign, stale, or malformed results", () => {
@@ -153,15 +198,24 @@ test("NaN Dashboard launcher inspector is settings-free and cannot request model
 function createInspectorHarness(): {
   connect(action: string): void;
   socket: FakeWebSocket;
+  importSection: FakeElement;
+  pasteSection: FakeElement;
   importButton: FakeElement;
+  saveButton: FakeElement;
   status: FakeElement;
+  saveStatus: FakeElement;
   clickImport(): void;
+  clickSave(): void;
+  paste(value: string): void;
+  capabilityRequests(): Array<{ kind: string; requestId: string }>;
   importRequests(): Array<{ kind: string; requestId: string }>;
   lastImportRequest(): { kind: string; requestId: string };
+  saveRequests(): Array<{ kind: string; requestId: string; value: string }>;
+  lastSaveRequest(): { kind: string; requestId: string; value: string };
   runLatestTimer(): void;
 } {
   const elements = new Map<string, FakeElement>();
-  for (const id of ["refreshSettings", "nanChromeImportSettings", "nanSettings", "nanModelUsageSettings", "autoRefresh", "refreshInterval", "nanModel", "nanKeyModel", "refreshNanModels", "importChromeSession", "importChromeSessionStatus"]) {
+  for (const id of ["refreshSettings", "nanChromeImportSettings", "nanSessionPasteSettings", "nanSettings", "nanModelUsageSettings", "autoRefresh", "refreshInterval", "nanModel", "nanKeyModel", "refreshNanModels", "importChromeSession", "importChromeSessionStatus", "nanSessionPaste", "saveSession", "saveSessionStatus"]) {
     elements.set(`#${id}`, new FakeElement());
   }
   const timers: Array<() => void> = [];
@@ -181,16 +235,28 @@ function createInspectorHarness(): {
   const requests = (): Array<{ kind: string; requestId: string }> => FakeWebSocket.instances.at(-1)!.sent
     .filter((message) => message.event === "sendToPlugin")
     .map((message) => message.payload);
+  const saveRequests = (): Array<{ kind: string; requestId: string; value: string }> => FakeWebSocket.instances.at(-1)!.sent
+    .filter((message) => message.event === "sendToPlugin" && (message.payload as { kind?: string }).kind === "nan.saveSession.v1")
+    .map((message) => message.payload as { kind: string; requestId: string; value: string });
   return {
     connect(action: string): void {
       (context as unknown as { connectElgatoStreamDeckSocket: Function }).connectElgatoStreamDeckSocket(1234, "context", "registerPropertyInspector", "{}", JSON.stringify({ action, payload: { settings: {} } }));
     },
     get socket(): FakeWebSocket { return FakeWebSocket.instances[FakeWebSocket.instances.length - 1]!; },
+    importSection: elements.get("#nanChromeImportSettings")!,
+    pasteSection: elements.get("#nanSessionPasteSettings")!,
     importButton: elements.get("#importChromeSession")!,
+    saveButton: elements.get("#saveSession")!,
     status: elements.get("#importChromeSessionStatus")!,
+    saveStatus: elements.get("#saveSessionStatus")!,
     clickImport(): void { elements.get("#importChromeSession")!.emit("click"); },
-    importRequests: requests,
-    lastImportRequest(): { kind: string; requestId: string } { return requests().at(-1)!; },
+    clickSave(): void { elements.get("#saveSession")!.emit("click"); },
+    paste(value: string): void { elements.get("#nanSessionPaste")!.value = value; },
+    capabilityRequests: () => requests().filter(({ kind }) => kind === "nan.capabilities.v1").map(({ kind, requestId }) => ({ kind, requestId })),
+    importRequests: () => requests().filter(({ kind }) => kind === "nan.importChromeSession.v1"),
+    lastImportRequest(): { kind: string; requestId: string } { return requests().filter(({ kind }) => kind === "nan.importChromeSession.v1").at(-1)!; },
+    saveRequests,
+    lastSaveRequest(): { kind: string; requestId: string; value: string } { return saveRequests().at(-1)!; },
     runLatestTimer(): void { timers.at(-1)!(); },
   };
 }
