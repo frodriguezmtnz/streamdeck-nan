@@ -28,8 +28,18 @@ async function createReleaseFixture() {
 }
 
 async function writeArtifact(root, source, content = "synthetic plugin contents", artifactName = "one.streamDeckPlugin") {
-  await writeFile(join(source, "plugin.txt"), content);
-  await execFile("zip", ["-q", join(root, "dist", artifactName), "plugin.txt"], { cwd: source });
+  const bin = join(source, "com.refactor-ia.nan.sdPlugin", "bin");
+  await mkdir(bin, { recursive: true });
+  await writeFile(join(bin, "plugin.js"), content);
+  await writeFile(join(bin, "nan-keychain"), "synthetic native helper");
+  await writeFile(join(bin, "nan-dpapi.ps1"), "param()");
+  await execFile("zip", [
+    "-q",
+    join(root, "dist", artifactName),
+    "com.refactor-ia.nan.sdPlugin/bin/plugin.js",
+    "com.refactor-ia.nan.sdPlugin/bin/nan-keychain",
+    "com.refactor-ia.nan.sdPlugin/bin/nan-dpapi.ps1",
+  ], { cwd: source });
   const bytes = await readFile(join(root, "dist", artifactName));
   const digest = createHash("sha256").update(bytes).digest("hex");
   await writeFile(join(root, "dist", "SHA256SUMS"), `${digest}  ${artifactName}\n`);

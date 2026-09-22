@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const excludedDirectories = new Set([".git", "node_modules", "dist"]);
@@ -40,12 +40,28 @@ export function scanFiles(files) {
   return files.length;
 }
 
+export const requiredReleaseEntries = [
+  "bin/plugin.js",
+  "bin/nan-keychain",
+  "bin/nan-dpapi.ps1",
+];
+
+export function verifyReleaseContents(files) {
+  const normalized = files.map((file) => file.split(sep).join("/"));
+  for (const entry of requiredReleaseEntries) {
+    if (!normalized.some((path) => path.endsWith(`/${entry}`))) {
+      throw new Error(`release package is missing ${entry}`);
+    }
+  }
+}
+
 export function scanReleaseArtifact(artifact) {
   const directory = mkdtempSync(join(tmpdir(), "streamdeck-secret-scan-"));
   try {
     execFileSync("unzip", ["-qq", artifact, "-d", directory]);
     const files = collectFiles(directory, new Set());
     scanFiles(files);
+    verifyReleaseContents(files);
     return files.length;
   } finally {
     rmSync(directory, { recursive: true, force: true });
